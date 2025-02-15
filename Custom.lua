@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 --Custom Modules!!!!!!!!!!!!
 local Trove = loadstring(game:HttpGet("https://raw.githubusercontent.com/skibiditoiletfan2007/ScriptPackages/main/Trove0_4_1.lua"))()
@@ -91,7 +92,90 @@ function CustomTemplate.CleanupTrove()
     end
     troves = {} 
 end
+local clonedCharacter = nil
+local isToggled = false
+local shiftLockEnabled = false
 
+function updateModelOrientation()
+    if clonedCharacter and clonedCharacter:FindFirstChild("HumanoidRootPart") then
+        local rootPart = clonedCharacter.HumanoidRootPart
+        local _, ry, _ = CustomTemplate.Camera().CFrame:ToOrientation()
+		CustomTemplate.Character().HumanoidRootPart.CFrame = CFrame.new(character.HumanoidRootPart.CFrame.p) * CFrame.fromOrientation(0, ry, 0)
+    end
+end
+
+function CustomTemplate.CloneFollow(state)
+    if state == nil then
+        isToggled = not isToggled
+    else
+        isToggled = state
+    end
+
+    local function updateClone()
+        if isToggled and clonedCharacter then
+            for _, originalPart in pairs(CustomTemplate.Character():GetChildren()) do
+                local clonePart = clonedCharacter:FindFirstChild(originalPart.Name)
+                if clonePart and (clonePart:IsA("BasePart") or clonePart:IsA("Part")) then
+                    clonePart.CFrame = originalPart.CFrame
+                    clonePart.CanCollide = false
+                elseif clonePart and clonePart:IsA("Humanoid") then
+                    clonePart.Health = originalPart.Health
+                    clonePart.WalkSpeed = originalPart.WalkSpeed
+                    clonePart.JumpPower = originalPart.JumpPower
+                end
+            end
+        end
+    end
+    if isToggled then
+        if not clonedCharacter then
+            clonedCharacter = CustomTemplate.Character():Clone()
+            clonedCharacter.Parent = game.Workspace
+
+            for _, descendant in pairs(clonedCharacter:GetDescendants()) do
+                if descendant:IsA("BasePart") then
+                    descendant.Transparency = 1
+                    descendant.CanCollide = false
+                elseif descendant:IsA("Accessory") or descendant:IsA("Hat") then
+                    descendant:Destroy()
+                end
+            end
+
+            if clonedCharacter:FindFirstChild("HumanoidRootPart") then
+                clonedCharacter:FindFirstChild("HumanoidRootPart").Anchored = true
+            end
+
+            CustomTemplate.Camera().CameraSubject = clonedCharacter:FindFirstChild("Humanoid")
+        end
+
+        RunService.RenderStepped:Connect(updateClone)
+    else
+        if clonedCharacter then
+            clonedCharacter:Destroy()
+            clonedCharacter = nil
+
+            CustomTemplate.Camera().CameraSubject = CustomTemplate.Humanoid()
+        end
+    end
+end
+UserInputService:GetPropertyChangedSignal("MouseBehavior"):Connect(function()
+    if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+        if not shiftLockEnabled then
+            shiftLockEnabled = true
+            task.spawn(function()
+                while shiftLockEnabled and isToggled do
+                    updateModelOrientation()
+					task.wait()
+                end
+            end)
+        end
+    else
+        if shiftLockEnabled then
+            shiftLockEnabled = false
+        end
+    end
+end)
+
+--Moveset function
 
 function CustomTemplate.Cinematic(Cutscene)
     local FrameTime = 0
