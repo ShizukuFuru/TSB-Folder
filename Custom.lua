@@ -85,6 +85,13 @@ end
 CustomTemplate.Download("ShizukuFuru/TSB", "Base.rbxm")
 
 -- FeraFunction
+function CustomTemplate.CleanupTrove()
+    for _, trove in pairs(troves) do
+        trove:Destroy() 
+    end
+    troves = {} 
+end
+
 
 function CustomTemplate.Cinematic(Cutscene)
     local FrameTime = 0
@@ -144,4 +151,5 @@ function CustomTemplate.NewMove(Bind, Name, Size, Side, func)
 
     table.insert(troves, trove)
 end
+
 return CustomTemplate
