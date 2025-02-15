@@ -93,26 +93,26 @@ function CustomTemplate.CleanupTrove()
     troves = {} 
 end
 local clonedCharacter = nil
-local isToggled = false
+local isCloneFollowToggled = false
 local shiftLockEnabled = false
 
 function updateModelOrientation()
     if clonedCharacter and clonedCharacter:FindFirstChild("HumanoidRootPart") then
         local rootPart = clonedCharacter.HumanoidRootPart
         local _, ry, _ = CustomTemplate.Camera().CFrame:ToOrientation()
-		CustomTemplate.Character().HumanoidRootPart.CFrame = CFrame.new(character.HumanoidRootPart.CFrame.p) * CFrame.fromOrientation(0, ry, 0)
+		CustomTemplate.RootPart().CFrame = CFrame.new(CustomTemplate.RootPart().CFrame.p) * CFrame.fromOrientation(0, ry, 0)
     end
 end
 
 function CustomTemplate.CloneFollow(state)
     if state == nil then
-        isToggled = not isToggled
+        isCloneFollowToggled = not isCloneFollowToggled
     else
-        isToggled = state
+        isCloneFollowToggled = state
     end
 
     local function updateClone()
-        if isToggled and clonedCharacter then
+        if isCloneFollowToggled and clonedCharacter then
             for _, originalPart in pairs(CustomTemplate.Character():GetChildren()) do
                 local clonePart = clonedCharacter:FindFirstChild(originalPart.Name)
                 if clonePart and (clonePart:IsA("BasePart") or clonePart:IsA("Part")) then
@@ -126,7 +126,7 @@ function CustomTemplate.CloneFollow(state)
             end
         end
     end
-    if isToggled then
+    if isCloneFollowToggled then
         if not clonedCharacter then
             clonedCharacter = CustomTemplate.Character():Clone()
             clonedCharacter.Parent = game.Workspace
@@ -162,7 +162,7 @@ UserInputService:GetPropertyChangedSignal("MouseBehavior"):Connect(function()
         if not shiftLockEnabled then
             shiftLockEnabled = true
             task.spawn(function()
-                while shiftLockEnabled and isToggled do
+                while shiftLockEnabled and isCloneFollowToggled do
                     updateModelOrientation()
 					task.wait()
                 end
