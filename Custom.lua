@@ -113,7 +113,7 @@ end
 function CustomTemplate.NewMove(Bind, Name, Size, Side, func)
 	local trove = Trove.new()
     local Base = game:GetObjects(getcustomasset("TSBCustom/Base.rbxm"))[1]
-    Base.Parent = game:GetService("Players").LocalPlayer.PlayerGui.Hotbar.Backpack.Hotbar
+    Base.Parent = CustomTemplate.Player().PlayerGui.Hotbar.Backpack.Hotbar
     Base.Size = UDim2.new(table.unpack(Size))
 	if Side == "Left" then
 		Base.LayoutOrder = 0
