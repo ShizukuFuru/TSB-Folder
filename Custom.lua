@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 --Custom Modules!!!!!!!!!!!!
 local Trove = loadstring(game:HttpGet("https://raw.githubusercontent.com/skibiditoiletfan2007/ScriptPackages/main/Trove0_4_1.lua"))()
 
----idk
+---idkss
 local troves = {}
 
 --- thing
@@ -30,7 +30,7 @@ function CustomTemplate.Player()
 end
 
 function CustomTemplate.Character()
-    return CustomTemplate.getPlayer() and CustomTemplate.getPlayer().Character
+    return CustomTemplate.Player() and CustomTemplate.Player().Character
 end
 
 function CustomTemplate.Humanoid()
