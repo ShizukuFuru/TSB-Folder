@@ -96,7 +96,7 @@ local clonedCharacter = nil
 local isCloneFollowToggled = false
 local shiftLockEnabled = false
 
-function updateModelOrientation()
+function UpdateModelOrientation()
     if clonedCharacter and clonedCharacter:FindFirstChild("HumanoidRootPart") then
         local rootPart = clonedCharacter.HumanoidRootPart
         local _, ry, _ = CustomTemplate.Camera().CFrame:ToOrientation()
@@ -111,7 +111,7 @@ function CustomTemplate.CloneFollow(state)
         isCloneFollowToggled = state
     end
 
-    local function updateClone()
+    local function UpdateClone()
         if isCloneFollowToggled and clonedCharacter then
             for _, originalPart in pairs(CustomTemplate.Character():GetChildren()) do
                 local clonePart = clonedCharacter:FindFirstChild(originalPart.Name)
@@ -147,7 +147,7 @@ function CustomTemplate.CloneFollow(state)
             CustomTemplate.Camera().CameraSubject = clonedCharacter:FindFirstChild("Humanoid")
         end
 
-        RunService.RenderStepped:Connect(updateClone)
+        RunService.RenderStepped:Connect(UpdateClone)
     else
         if clonedCharacter then
             clonedCharacter:Destroy()
@@ -163,7 +163,7 @@ UserInputService:GetPropertyChangedSignal("MouseBehavior"):Connect(function()
             shiftLockEnabled = true
             task.spawn(function()
                 while shiftLockEnabled and isCloneFollowToggled do
-                    updateModelOrientation()
+                    UpdateModelOrientation()
 					task.wait()
                 end
             end)
