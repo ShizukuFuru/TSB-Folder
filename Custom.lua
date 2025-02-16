@@ -86,6 +86,22 @@ end
 CustomTemplate.Download("ShizukuFuru/TSB", "Base.rbxm")
 
 -- FeraFunction
+function CustomTemplate.GetNearest()
+    local closestModel = nil
+    local shortestDistance = math.huge
+    for _, model in pairs(workspace.Live:GetChildren()) do
+        if model ~= CustomTemplate.Character() and model:FindFirstChild("HumanoidRootPart") then
+            local modelRootPart = model.HumanoidRootPart
+            local distance = (CustomTemplate.RootPart().Position - modelRootPart.Position).Magnitude
+            if distance < shortestDistance then
+                closestModel = model
+                shortestDistance = distance
+            end
+        end
+    end
+    return closestModel
+end
+
 function CustomTemplate.CleanupTrove()
     for _, trove in pairs(troves) do
         trove:Destroy() 

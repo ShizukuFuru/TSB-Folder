@@ -11,23 +11,6 @@ local rootPart = CT.RootPart()
 local character = CT.Character()
 local player = CT.Player()
 
-function getClosestModel()
-    local closestModel = nil
-    local shortestDistance = math.huge
-
-    for _, model in pairs(workspace.Live:GetChildren()) do
-        if model ~= CT.Character() and model:FindFirstChild("HumanoidRootPart") then
-            local modelRootPart = model.HumanoidRootPart
-            local distance = (CT.RootPart().Position - modelRootPart.Position).Magnitude
-            if distance < shortestDistance then
-                closestModel = model
-                shortestDistance = distance
-            end
-        end
-    end
-    return closestModel
-end
-
 function fling(FlingValue, useLookVector)
     flingValue = FlingValue
     task.spawn(function()
@@ -43,7 +26,7 @@ function fling(FlingValue, useLookVector)
                 end
 
                 if hiddenfling then
-                    local closestModel = getClosestModel()
+                    local closestModel = CT.GetNearest()
                     if closestModel and closestModel:FindFirstChild("HumanoidRootPart") then
                         local targetRootPart = closestModel.HumanoidRootPart
                         vel = hrp.Velocity
@@ -55,7 +38,7 @@ function fling(FlingValue, useLookVector)
                         else
                             direction = (targetRootPart.Position - hrp.Position).unit -- Use direction to target
                         end
-
+                        direction = Vector3.new(direction.X, 0, direction.Z).unit
                         hrp.Velocity = direction * flingValue
 
                         RunService.RenderStepped:Wait()
@@ -85,7 +68,25 @@ function Misc.ToggleFling(state, value, useLookVector)
         fling(value, useLookVector) 
     end
 end
+
+function Misc.AimStabilizer(isEnabled, offset)
+    if not isEnabled then return end  
+    local vChar = CT.GetNearest() 
+    if not vChar or not vChar:FindFirstChild("HumanoidRootPart") then
+        return  
+    end
+    if not character:FindFirstChild('Ragdoll') then
+        CT.Humanoid().AutoRotate = false
+        pcall(function()
+            local Vector
+                Vector = Vector3.new(vChar.HumanoidRootPart.Position.X, rootPart.Position.Y, vChar.HumanoidRootPart.Position.Z) + (Vector3.new(vChar.HumanoidRootPart.Velocity.X, 0, vChar.HumanoidRootPart.Velocity.Z) / offset)
+            CT.RootPart().CFrame = CFrame.lookAt(rootPart.CFrame.Position, Vector)
+        end)
+    end
+end
+
  
+
 
 return Misc
  
