@@ -127,7 +127,7 @@ function AddHat(Hat)
 end
 
 function Misc.AddHatter(id)
-    local success, Hat = pcall(function() return AddRbxasset(id)[1] end)
+    local success, Hat = pcall(function() return CT.AddRbxasset(id)[1] end)
     if success then
         AddHat(Hat)
     else
