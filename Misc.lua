@@ -38,7 +38,6 @@ function fling(FlingValue, useLookVector)
                         else
                             direction = (targetRootPart.Position - hrp.Position).unit -- Use direction to target
                         end
-                        direction = Vector3.new(direction.X, 0, direction.Z).unit
                         hrp.Velocity = direction * flingValue
 
                         RunService.RenderStepped:Wait()
