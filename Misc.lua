@@ -1,0 +1,75 @@
+local Misc = {}
+
+local RunService = game:GetService("RunService")
+
+local hiddenfling = false 
+local flingActive = false 
+local flingValue = 1000
+
+function getClosestModel()
+    local closestModel = nil
+    local shortestDistance = math.huge
+
+    for _, model in pairs(workspace.Live:GetChildren()) do
+        if model ~= CT.Character() and model:FindFirstChild("HumanoidRootPart") then
+            local modelRootPart = model.HumanoidRootPart
+            local distance = (CT.RootPart().Position - modelRootPart.Position).Magnitude
+            if distance < shortestDistance then
+                closestModel = model
+                shortestDistance = distance
+            end
+        end
+    end
+    return closestModel
+end
+
+function fling()
+    while true do
+        RunService.Heartbeat:Wait()
+        if hiddenfling then
+            flingActive = true
+            local hrp, c, vel, movel = CT.RootPart(), CT.Character(), nil, 0.1
+
+            while hiddenfling and not (c and c.Parent and hrp and hrp.Parent) do
+                RunService.Heartbeat:Wait()
+                c = CT.Character()
+                hrp = c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso") or c:FindFirstChild("UpperTorso")
+            end
+
+            if hiddenfling then
+                local closestModel = getClosestModel()
+                if closestModel and closestModel:FindFirstChild("HumanoidRootPart") then
+                    local targetRootPart = closestModel.HumanoidRootPart
+                    vel = hrp.Velocity
+                    local directionToTarget = (targetRootPart.Position - hrp.Position).unit
+                    hrp.Velocity = directionToTarget * flingValue
+
+                    RunService.RenderStepped:Wait()
+                    if c and c.Parent and hrp and hrp.Parent then
+                        hrp.Velocity = vel
+                    end
+
+                    RunService.Stepped:Wait()
+                    if c and c.Parent and hrp and hrp.Parent then
+                        hrp.Velocity = vel + Vector3.new(0, movel, 0)
+                        movel = movel * -1
+                    end
+                end
+            end
+        else
+            if flingActive then
+                flingActive = false
+            end
+        end
+    end
+end
+
+function Misc.toggleFling(state)
+    hiddenfling = state
+    if hiddenfling and not flingActive then
+        fling() 
+    end
+end
+
+return Misc
+ 
