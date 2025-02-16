@@ -64,7 +64,9 @@ function CustomTemplate.AddRbxasset(rbxasset, parent)
     if not asset then
         warn("No asset found in rbxasset: " .. rbxasset)
     end
-    asset.Parent = parent
+    if parent then
+        asset.Parent = parent
+    end
     return asset
 end
 
