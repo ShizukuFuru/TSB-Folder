@@ -65,7 +65,7 @@ function fling(FlingValue)
     end
 end
 
-function Misc.toggleFling(state, value)
+function Misc.ToggleFling(state, value)
     hiddenfling = state
     if hiddenfling and not flingActive then
         fling(value) 
