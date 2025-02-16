@@ -26,44 +26,46 @@ end
 
 function fling(FlingValue)
     flingValue = FlingValue
-    while true do
-        RunService.Heartbeat:Wait()
-        if hiddenfling then
-            flingActive = true
-            local hrp, c, vel, movel = CT.RootPart(), CT.Character(), nil, 0.1
-
-            while hiddenfling and not (c and c.Parent and hrp and hrp.Parent) do
-                RunService.Heartbeat:Wait()
-                c = CT.Character()
-                hrp = c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso") or c:FindFirstChild("UpperTorso")
-            end
-
+    task.spawn(function()
+        while true do
+            RunService.Heartbeat:Wait()
             if hiddenfling then
-                local closestModel = getClosestModel()
-                if closestModel and closestModel:FindFirstChild("HumanoidRootPart") then
-                    local targetRootPart = closestModel.HumanoidRootPart
-                    vel = hrp.Velocity
-                    local directionToTarget = (targetRootPart.Position - hrp.Position).unit
-                    hrp.Velocity = directionToTarget * flingValue
+                flingActive = true
+                local hrp, c, vel, movel = CT.RootPart(), CT.Character(), nil, 0.1
 
-                    RunService.RenderStepped:Wait()
-                    if c and c.Parent and hrp and hrp.Parent then
-                        hrp.Velocity = vel
-                    end
+                while hiddenfling and not (c and c.Parent and hrp and hrp.Parent) do
+                    RunService.Heartbeat:Wait()
+                    c = CT.Character()
+                    hrp = c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso") or c:FindFirstChild("UpperTorso")
+                end
 
-                    RunService.Stepped:Wait()
-                    if c and c.Parent and hrp and hrp.Parent then
-                        hrp.Velocity = vel + Vector3.new(0, movel, 0)
-                        movel = movel * -1
+                if hiddenfling then
+                    local closestModel = getClosestModel()
+                    if closestModel and closestModel:FindFirstChild("HumanoidRootPart") then
+                        local targetRootPart = closestModel.HumanoidRootPart
+                        vel = hrp.Velocity
+                        local directionToTarget = (targetRootPart.Position - hrp.Position).unit
+                        hrp.Velocity = directionToTarget * flingValue
+
+                        RunService.RenderStepped:Wait()
+                        if c and c.Parent and hrp and hrp.Parent then
+                            hrp.Velocity = vel
+                        end
+
+                        RunService.Stepped:Wait()
+                        if c and c.Parent and hrp and hrp.Parent then
+                            hrp.Velocity = vel + Vector3.new(0, movel, 0)
+                            movel = movel * -1
+                        end
                     end
                 end
-            end
-        else
-            if flingActive then
-                flingActive = false
+            else
+                if flingActive then
+                    flingActive = false
+                end
             end
         end
-    end
+    end)
 end
 
 function Misc.ToggleFling(state, value)
