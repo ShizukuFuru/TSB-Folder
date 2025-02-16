@@ -4,7 +4,7 @@ local RunService = game:GetService("RunService")
 
 local hiddenfling = false 
 local flingActive = false 
-local flingValue = 1000
+local flingValue
 
 function getClosestModel()
     local closestModel = nil
@@ -23,7 +23,8 @@ function getClosestModel()
     return closestModel
 end
 
-function fling()
+function fling(FlingValue)
+    flingValue = FlingValue
     while true do
         RunService.Heartbeat:Wait()
         if hiddenfling then
@@ -64,10 +65,10 @@ function fling()
     end
 end
 
-function Misc.toggleFling(state)
+function Misc.toggleFling(state, value)
     hiddenfling = state
     if hiddenfling and not flingActive then
-        fling() 
+        fling(value) 
     end
 end
 
