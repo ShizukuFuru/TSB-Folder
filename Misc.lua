@@ -107,9 +107,9 @@ function FindAttachment(Model, AttachmentName)
     end
 end
 
-function AddHat(Hat)
-    Hat.Parent = CT.Character()
-    local Handle = Hat:FindFirstChild("Handle")
+function AddAccessory(Accessory, AttachmentPoint)
+    Accessory.Parent = CT.Character()
+    local Handle = Accessory:FindFirstChild("Handle")
     if Handle then
         local Attachment = Handle:FindFirstChildOfClass("Attachment")
         if Attachment then
@@ -118,20 +118,20 @@ function AddHat(Hat)
                 CreateWeld(CharacterAttachment.Parent, Attachment.Parent, CharacterAttachment.CFrame, Attachment.CFrame, CharacterAttachment.Parent)
             end
         else
-            local Head = CT.Character():FindFirstChild("Head")
-            if Head then
-                CreateWeld(Head, Handle, CFrame.new(0, 0, 0), Hat.AttachmentPoint, Head)
+            local TargetPart = CT.Character():FindFirstChild(AttachmentPoint)
+            if TargetPart then
+                CreateWeld(TargetPart, Handle, CFrame.new(0, 0, 0), Accessory.AttachmentPoint, TargetPart)
             end
         end
     end
 end
 
-function Misc.AddHatter(id)
-    local success, Hat = pcall(function() return game:GetObjects("rbxassetid://" .. id)[1] end)
+function Misc.AddAccessory(id, AttachmentPoint)
+    local success, Accessory = pcall(function() return game:GetObjects("rbxassetid://" .. id)[1] end)
     if success then
-        AddHat(Hat)
+        AddAccessory(Accessory, AttachmentPoint)
     else
-        warn("Failed to add hat, invalid assetId or other")
+        warn("Failed to add accessory, invalid assetId or other")
     end
 end
 
