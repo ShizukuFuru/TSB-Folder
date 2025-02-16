@@ -7,6 +7,10 @@ local hiddenfling = false
 local flingActive = false 
 local flingValue
 
+local rootPart = CT.RootPart()
+local character = CT.Character()
+local player = CT.Player()
+
 function getClosestModel()
     local closestModel = nil
     local shortestDistance = math.huge
@@ -24,18 +28,17 @@ function getClosestModel()
     return closestModel
 end
 
-function fling(FlingValue)
+function fling(FlingValue, useLookVector)
     flingValue = FlingValue
     task.spawn(function()
         while true do
             RunService.Heartbeat:Wait()
             if hiddenfling then
                 flingActive = true
-                local hrp, c, vel, movel = CT.RootPart(), CT.Character(), nil, 0.1
-
+                local hrp, c, vel, movel = rootPart, character, nil, 0.1
                 while hiddenfling and not (c and c.Parent and hrp and hrp.Parent) do
                     RunService.Heartbeat:Wait()
-                    c = CT.Character()
+                    c = player.Character
                     hrp = c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso") or c:FindFirstChild("UpperTorso")
                 end
 
@@ -44,8 +47,16 @@ function fling(FlingValue)
                     if closestModel and closestModel:FindFirstChild("HumanoidRootPart") then
                         local targetRootPart = closestModel.HumanoidRootPart
                         vel = hrp.Velocity
-                        local directionToTarget = (targetRootPart.Position - hrp.Position).unit
-                        hrp.Velocity = directionToTarget * flingValue
+
+                        -- Determine the direction based on the useLookVector parameter
+                        local direction
+                        if useLookVector then
+                            direction = hrp.CFrame.LookVector -- Use LookVector
+                        else
+                            direction = (targetRootPart.Position - hrp.Position).unit -- Use direction to target
+                        end
+
+                        hrp.Velocity = direction * flingValue
 
                         RunService.RenderStepped:Wait()
                         if c and c.Parent and hrp and hrp.Parent then
@@ -68,12 +79,13 @@ function fling(FlingValue)
     end)
 end
 
-function Misc.ToggleFling(state, value)
+function Misc.ToggleFling(state, value, useLookVector)
     hiddenfling = state
     if hiddenfling and not flingActive then
-        fling(value) 
+        fling(value, useLookVector) 
     end
 end
+ 
 
 return Misc
  
