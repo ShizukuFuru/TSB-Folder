@@ -109,11 +109,11 @@ end
 
 function AddAccessory(Accessory, AttachmentPoint)
     local character = CT.Character()
-    Accessory.Parent = character
     local Handle = Accessory:FindFirstChild("Handle")
 
     if Handle then
         local Attachment = Handle:FindFirstChildOfClass("Attachment")
+        Accessory.Parent = character
         if Attachment then
             local CharacterAttachment = FindAttachment(character, Attachment.Name)
             if CharacterAttachment then
