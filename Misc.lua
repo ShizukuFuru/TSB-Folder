@@ -131,6 +131,7 @@ function AddAccessory(Accessory, AttachmentPoint)
                 obj:Destroy()
             end
         end
+        task.wait()
         Accessory.Parent = character
     end
 end
