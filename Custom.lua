@@ -79,9 +79,9 @@ function CustomTemplate.Download(repo, rawFile)
             makefolder(folderName)
         end
         writefile(filePath, game:HttpGet("https://raw.githubusercontent.com/" .. repo .. "/refs/heads/main/" .. rawFile))
-        print("File written: " .. filePath)
+        -- print("File written: " .. filePath)
     else
-        print("File already exists: " .. filePath)
+        -- print("File already exists: " .. filePath)
     end
 end
 
