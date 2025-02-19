@@ -108,23 +108,33 @@ function FindAttachment(Model, AttachmentName)
 end
 
 function AddAccessory(Accessory, AttachmentPoint)
-    Accessory.Parent = CT.Character()
+    local character = CT.Character()
+    Accessory.Parent = character
     local Handle = Accessory:FindFirstChild("Handle")
+
     if Handle then
         local Attachment = Handle:FindFirstChildOfClass("Attachment")
         if Attachment then
-            local CharacterAttachment = FindAttachment(CT.Character(), Attachment.Name)
+            local CharacterAttachment = FindAttachment(character, Attachment.Name)
             if CharacterAttachment then
                 CreateWeld(CharacterAttachment.Parent, Attachment.Parent, CharacterAttachment.CFrame, Attachment.CFrame, CharacterAttachment.Parent)
             end
         else
-            local TargetPart = CT.Character():FindFirstChild(AttachmentPoint)
+            local TargetPart = character:FindFirstChild(AttachmentPoint)
             if TargetPart then
                 CreateWeld(TargetPart, Handle, CFrame.new(0, 0, 0), Accessory.AttachmentPoint, TargetPart)
             end
         end
+    elseif Accessory:IsA("Shirt") or Accessory:IsA("Pants") then
+        for _, obj in pairs(character:GetChildren()) do
+            if (Accessory:IsA("Shirt") and obj:IsA("Shirt")) or (Accessory:IsA("Pants") and obj:IsA("Pants")) then
+                obj:Destroy()
+            end
+        end
+        Accessory.Parent = character
     end
 end
+
 
 function Misc.AddAccessory(id, AttachmentPoint)
     local success, Accessory = pcall(function() return game:GetObjects("rbxassetid://" .. id)[1] end)
