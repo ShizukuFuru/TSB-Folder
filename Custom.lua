@@ -271,7 +271,7 @@ function CustomTemplate.Hotbar(side)
             end)
         end
     end
-
+    table.insert(troves,self.trove)
     return Hotbar.new(side)
 end
 
