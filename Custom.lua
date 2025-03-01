@@ -86,8 +86,8 @@ function CustomTemplate.Download(repo, rawFile)
 end
 
 CustomTemplate.Download("ShizukuFuru/TSB", "Base.rbxm")
-CustomTemplate.Download("ShizukuFuru/TSB", "LeftHotBar2.rbxm")
-CustomTemplate.Download("ShizukuFuru/TSB", "RightHotBar2.rbxm")
+CustomTemplate.Download("ShizukuFuru/TSB", "LeftHotBar.rbxm")
+CustomTemplate.Download("ShizukuFuru/TSB", "RightHotBar.rbxm")
 
 -- FeraFunction
 function CustomTemplate.GetNearest()
