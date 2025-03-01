@@ -243,7 +243,7 @@ function CustomTemplate.Hotbar(side)
 
     function Hotbar:NewMove(Bind, Name, Size, Side, func)
         local Base = game:GetObjects(getcustomasset("TSBCustom/Base.rbxm"))[1]
-        Base.Parent = self.instance
+        Base.Parent = self.instance.Hotbar
         Base.Size = UDim2.new(table.unpack(Size))
         if Side == "Left" then
             Base.LayoutOrder = 0
