@@ -264,12 +264,20 @@ function CustomTemplate.Hotbar(side)
         end
         if func and Base.Base:IsA("TextButton") then
             self.trove:Connect(Base.Base.MouseButton1Click, func)
+            local isNumber = tonumber(Bind) ~= nil and #Bind == 1
+            local keyCode = Enum.KeyCode[Bind]
+            local keypadCode = nil
+            if isNumber then
+                keypadCode = Enum.KeyCode["Keypad" .. Bind]
+            end
+            
             self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
-                if not gameProcessed and input.KeyCode == Enum.KeyCode[Bind] then
-                    func()
+                if not gameProcessed then
+                    if input.KeyCode == keyCode or (isNumber and input.KeyCode == keypadCode) then
+                        func()
+                    end
                 end
             end)
-        end
         table.insert(troves,self.trove)
     end
      
