@@ -220,58 +220,59 @@ function CustomTemplate.Cinematic(Cutscene)
         end
     end)
 end
-local Hotbar = {}
-Hotbar.__index = Hotbar
+ 
+function CustomTemplate.Hotbar(side)
+    local Hotbar = {}
+    Hotbar.__index = Hotbar
 
-function Hotbar.new(side)
-    local self = setmetatable({}, Hotbar)
-    self.trove = Trove.new()  
-    local player = CustomTemplate.Player()
+    function Hotbar.new(side)
+        local self = setmetatable({}, Hotbar)
+        self.trove = Trove.new()
 
-    if side == "L" or side == "Left" then
-        self.instance = game:GetObjects(getcustomasset("TSBCustom/LeftHotBar.rbxm"))[1]
-    elseif side == "R" or side == "Right" then
-        self.instance = game:GetObjects(getcustomasset("TSBCustom/RightHotBar.rbxm"))[1]
-    else
-        print("Choose a valid side! ('L' or 'R')")
-        return nil
+        if side == "L" or side == "Left" then
+            self.instance = game:GetObjects(getcustomasset("TSBCustom/LeftHotBar.rbxm"))[1]
+        elseif side == "R" or side == "Right" then
+            self.instance = game:GetObjects(getcustomasset("TSBCustom/RightHotBar.rbxm"))[1]
+        else
+            print("Choose a valid side! ('L' or 'R')")
+            return nil
+        end
+        self.instance.Parent = CustomTemplate.Player().PlayerGui.Hotbar.Backpack.Hotbar
+        return self
     end
-    self.instance.Parent = CustomTemplate.Player().PlayerGui.Hotbar.Backpack.Hotbar
-    table.insert(troves, self.trove)
-    return self
-end
 
-function Hotbar:NewMove(Bind, Name, Size, Side, func)
-    local Base = game:GetObjects(getcustomasset("TSBCustom/Base.rbxm"))[1]
-    Base.Parent = self.instance   
-    Base.Size = UDim2.new(table.unpack(Size))
-	if Side == "Left" then
-		Base.LayoutOrder = 0
-	elseif Side == "Right" then
-		Base.LayoutOrder = 2
-	end
-	if Base.Size.X.Offset < 60 or Base.Size.Y.Offset < 60 then
-		Base.Base.Number.Size = UDim2.new(0.2, 0, 0.2, 0)
-	end
-	if Base.Base.ToolName then
-		Base.Base.ToolName.Text = Name
-	end
-	if Base.Base.Number then
-		Base.Base.Number.Text = Bind
-		if Base.Base.Number.Number then 
-			Base.Base.Number.Number.Text = Bind
-		end
-	end
-    if func and Base.Base:IsA("TextButton") then
-        self.trove:Connect(Base.Base.MouseButton1Click, func)
-        self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
-            if not gameProcessed and input.KeyCode == Enum.KeyCode[Bind] then
-                func()
+    function Hotbar:NewMove(Bind, Name, Size, Side, func)
+        local Base = game:GetObjects(getcustomasset("TSBCustom/Base.rbxm"))[1]
+        Base.Parent = self.instance
+        Base.Size = UDim2.new(table.unpack(Size))
+        if Side == "Left" then
+            Base.LayoutOrder = 0
+        elseif Side == "Right" then
+            Base.LayoutOrder = 2
+        end
+        if Base.Size.X.Offset < 60 or Base.Size.Y.Offset < 60 then
+            Base.Base.Number.Size = UDim2.new(0.2, 0, 0.2, 0)
+        end
+        if Base.Base.ToolName then
+            Base.Base.ToolName.Text = Name
+        end
+        if Base.Base.Number then
+            Base.Base.Number.Text = Bind
+            if Base.Base.Number.Number then
+                Base.Base.Number.Number.Text = Bind
             end
-        end)
+        end
+        if func and Base.Base:IsA("TextButton") then
+            self.trove:Connect(Base.Base.MouseButton1Click, func)
+            self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
+                if not gameProcessed and input.KeyCode == Enum.KeyCode[Bind] then
+                    func()
+                end
+            end)
+        end
     end
 
-    table.insert(troves, self.trove)
+    return Hotbar.new(side)
 end
 
 return CustomTemplate
