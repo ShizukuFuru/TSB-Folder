@@ -86,6 +86,8 @@ function CustomTemplate.Download(repo, rawFile)
 end
 
 CustomTemplate.Download("ShizukuFuru/TSB", "Base.rbxm")
+CustomTemplate.Download("ShizukuFuru/TSB", "LeftHotBar.rbxm")
+CustomTemplate.Download("ShizukuFuru/TSB", "RightHotBar.rbxm")
 
 -- FeraFunction
 function CustomTemplate.GetNearest()
@@ -218,11 +220,30 @@ function CustomTemplate.Cinematic(Cutscene)
         end
     end)
 end
+local Hotbar = {}
+Hotbar.__index = Hotbar
 
-function CustomTemplate.NewMove(Bind, Name, Size, Side, func)
-	local trove = Trove.new()
+function Hotbar.new(side)
+    local self = setmetatable({}, Hotbar)
+    self.trove = Trove.new()  
+    local player = CustomTemplate.Player()
+
+    if side == "L" or side == "Left" then
+        self.instance = game:GetObjects(getcustomasset("TSBCustom/LeftHotBar.rbxm"))[1]
+    elseif side == "R" or side == "Right" then
+        self.instance = game:GetObjects(getcustomasset("TSBCustom/RightHotBar.rbxm"))[1]
+    else
+        print("Choose a valid side! ('L' or 'R')")
+        return nil
+    end
+    self.instance.Parent = CustomTemplate.Player().PlayerGui.Hotbar.Backpack.Hotbar
+    table.insert(troves, self.trove)
+    return self
+end
+
+function Hotbar:NewMove(Bind, Name, Size, Side, func)
     local Base = game:GetObjects(getcustomasset("TSBCustom/Base.rbxm"))[1]
-    Base.Parent = CustomTemplate.Player().PlayerGui.Hotbar.Backpack.Hotbar
+    Base.Parent = self.instance   
     Base.Size = UDim2.new(table.unpack(Size))
 	if Side == "Left" then
 		Base.LayoutOrder = 0
@@ -242,16 +263,15 @@ function CustomTemplate.NewMove(Bind, Name, Size, Side, func)
 		end
 	end
     if func and Base.Base:IsA("TextButton") then
-        trove:Connect(Base.Base.MouseButton1Click, func)
-
-        trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
+        self.trove:Connect(Base.Base.MouseButton1Click, func)
+        self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
             if not gameProcessed and input.KeyCode == Enum.KeyCode[Bind] then
                 func()
             end
         end)
     end
 
-    table.insert(troves, trove)
+    table.insert(troves, self.trove)
 end
 
 return CustomTemplate
