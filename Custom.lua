@@ -88,6 +88,7 @@ end
 CustomTemplate.Download("ShizukuFuru/TSB", "Base.rbxm")
 CustomTemplate.Download("ShizukuFuru/TSB", "LeftHotBar.rbxm")
 CustomTemplate.Download("ShizukuFuru/TSB", "RightHotBar.rbxm")
+CustomTemplate.Download("ShizukuFuru/TSB", "Cooldown.rbxm")
 
 -- FeraFunction
 function CustomTemplate.GetNearest()
@@ -312,3 +313,5 @@ end
 function CustomTemplate.Hotbar(side)
     return Hotbar.new(side)
 end
+
+return CustomTemplate
