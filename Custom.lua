@@ -12,8 +12,8 @@ local Trove = loadstring(game:HttpGet("https://raw.githubusercontent.com/skibidi
 
 ---idkss
 local shitteryLock = true
-getgenv().troves = {}
-
+getgenv().moves = getgenv().moves or {}
+getgenv().animationFuncs = {}
 --- thing
 function CustomTemplate.Loop(type, func)
     local connection
@@ -108,14 +108,13 @@ function CustomTemplate.GetNearest()
     return closestModel
 end
 
-function CustomTemplate.CleanupTrove()
-    for _, trove in next, getgenv().troves do
-        print(trove)
+function CustomTemplate.CleanupMoves()
+    print("god damn it")
+    for i, trove in pairs(getgenv().moves) do
         trove:Clean() 
-        print("hiiiii")
+        print("are you sure this is happening")
     end
-    getgenv().troves = {} 
-    print("yoo")
+    getgenv().moves = {} 
 end
 local clonedCharacter = nil
 local isCloneFollowToggled = false
@@ -238,6 +237,7 @@ function Hotbar.new(side)
     local self = setmetatable({}, Hotbar)
     self.trove = Trove.new()
     self.moves = {}
+    table.insert(getgenv().moves, self.trove)
     -- Load the appropriate Hotbar instance based on the side
     if side == "L" or side == "Left" then
         self.instance = game:GetObjects(getcustomasset("TSBCustom/LeftHotBar.rbxm"))[1]
@@ -247,7 +247,13 @@ function Hotbar.new(side)
         print("Choose a valid side! ('L' or 'R')")
         return nil
     end
-    self.instance.Parent = CustomTemplate.Player().PlayerGui.Hotbar.Backpack.Hotbar
+    self.instance.Parent = CustomTemplate.Player().PlayerGui:WaitForChild("Hotbar"):WaitForChild("Backpack"):WaitForChild("Hotbar")
+    self.trove:Add(self.instance)
+    CustomTemplate.Player().CharacterAdded:Connect(function(character)
+        if not self.instance.Parent then
+            self.instance.Parent = CustomTemplate.Player().PlayerGui:WaitForChild("Hotbar"):WaitForChild("Backpack"):WaitForChild("Hotbar")
+        end
+    end)
     return self
 end
 
@@ -309,8 +315,7 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
         end
     end)
     
- 
-    table.insert(getgenv().troves, self.trove)
+     
 end
 
 function Hotbar:StartCooldown(bind)
@@ -322,6 +327,7 @@ function Hotbar:StartCooldown(bind)
             local CooldownIndicator = Base:FindFirstChild("Cooldown")
             CooldownIndicator.Transparency = .5
             if CooldownIndicator then
+                Base:SetAttribute("IsOnCooldown", true)
                 CooldownIndicator.Size = UDim2.new(1, 0, 1, 0)
                 local tweenInfo = TweenInfo.new(cooldownTime, Enum.EasingStyle.Linear)
                 local tween = game:GetService("TweenService"):Create(
@@ -340,8 +346,31 @@ function Hotbar:StartCooldown(bind)
     end
 end
 
+function Hotbar:DestroyTrove()
+    if self.trove then
+        print("hola seniopr")
+        self.trove:Clean()
+    end
+end
 function CustomTemplate.Hotbar(side)
     return Hotbar.new(side)
+end
+
+function CustomTemplate.SetUpAnimation()
+    local function setupAnimationDetection()
+        CustomTemplate.Humanoid().AnimationPlayed:Connect(function(animationTrack)
+            local animId = animationTrack.Animation.AnimationId
+            local callback = animationFuncs[animId]
+            if callback then
+                task.spawn(function() callback(animationTrack) end)
+            end
+        end)
+    end
+    setupAnimationDetection()
+    CustomTemplate.Player().CharacterAdded:Connect(setupAnimationDetection)
+end
+function CustomTemplate.AnimationEvents(animId, func)
+    animationFuncs[animId] = func
 end
 
 return CustomTemplate
