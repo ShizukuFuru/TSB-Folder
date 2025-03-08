@@ -241,7 +241,7 @@ function Hotbar.new(side)
     return self
 end
 
-function Hotbar:NewMove(Bind, Name, Size, Side, func)
+function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     local Base = game:GetObjects(getcustomasset("TSBCustom/Base.rbxm"))[1]
     Base.Parent = self.instance.Hotbar
     Base.Size = UDim2.new(table.unpack(Size))
@@ -267,24 +267,42 @@ function Hotbar:NewMove(Bind, Name, Size, Side, func)
         end
     end
     
-    if func and Base.Base:IsA("TextButton") then
-        self.trove:Connect(Base.Base.MouseButton1Click, func)
-        local isNumber = tonumber(Bind) ~= nil and #Bind == 1
-        local keyCode = Enum.KeyCode[Bind]
-        local keypadCode = nil
-        if isNumber then
-            keypadCode = Enum.KeyCode["Keypad" .. Bind]
-        end
-        
-        self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
-            if not gameProcessed then
-                if input.KeyCode == keyCode or (isNumber and input.KeyCode == keypadCode) then
-                    func()
-                end
+    Base:SetAttribute("IsOnCooldown", false)
+    
+    local function triggerMove()
+        if not Base:GetAttribute("IsOnCooldown") then
+            func()
+            if cooldownTime > 0 then
+                Base:SetAttribute("IsOnCooldown", true)
+                task.delay(cooldownTime, function()
+                    if Base and Base.Parent then
+                        Base:SetAttribute("IsOnCooldown", false)
+                    end
+                end)
             end
-        end)
-        table.insert(troves, self.trove)
+        end
     end
+    
+    if Base.Base:IsA("TextButton") then
+        self.trove:Connect(Base.Base.MouseButton1Click, triggerMove)
+    end
+    
+    local isNumber = tonumber(Bind) ~= nil and #Bind == 1
+    local keyCode = Enum.KeyCode[Bind]
+    local keypadCode = nil
+    if isNumber then
+        keypadCode = Enum.KeyCode["Keypad" .. Bind]
+    end
+    
+    self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
+        if not gameProcessed then
+            if input.KeyCode == keyCode or (isNumber and input.KeyCode == keypadCode) then
+                triggerMove()
+            end
+        end
+    end)
+    
+    table.insert(troves, self.trove)
 end
 
 function CustomTemplate.Hotbar(side)
