@@ -109,6 +109,8 @@ end
 function CustomTemplate.CleanupTrove()
     for _, trove in pairs(troves) do
         trove:Destroy() 
+        print(trove)
+        print("hiiiii")
     end
     troves = {} 
 end
