@@ -11,6 +11,7 @@ local UserInputService = game:GetService("UserInputService")
 local Trove = loadstring(game:HttpGet("https://raw.githubusercontent.com/skibiditoiletfan2007/ScriptPackages/main/Trove0_4_1.lua"))()
 
 ---idkss
+local shitteryLock = true
 getgenv().troves = {}
 
 --- thing
@@ -128,11 +129,16 @@ function UpdateModelOrientation()
     end
 end
 
-function CustomTemplate.CloneFollow(state)
+function CustomTemplate.CloneFollow(state, shitLock)
     if state == nil then
         isCloneFollowToggled = not isCloneFollowToggled
     else
         isCloneFollowToggled = state
+    end
+    if shitLock == false then
+        shitteryLock = false
+    else
+        shitteryLock = true
     end
 
     local function UpdateClone()
@@ -186,7 +192,7 @@ UserInputService:GetPropertyChangedSignal("MouseBehavior"):Connect(function()
         if not shiftLockEnabled then
             shiftLockEnabled = true
             task.spawn(function()
-                while shiftLockEnabled and isCloneFollowToggled do
+                while shiftLockEnabled and isCloneFollowToggled and shitteryLock do
                     UpdateModelOrientation()
 					task.wait()
                 end
@@ -231,7 +237,7 @@ Hotbar.__index = Hotbar
 function Hotbar.new(side)
     local self = setmetatable({}, Hotbar)
     self.trove = Trove.new()
-
+    self.moves = {}
     -- Load the appropriate Hotbar instance based on the side
     if side == "L" or side == "Left" then
         self.instance = game:GetObjects(getcustomasset("TSBCustom/LeftHotBar.rbxm"))[1]
@@ -249,7 +255,10 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     local Base = game:GetObjects(getcustomasset("TSBCustom/Base.rbxm"))[1]
     Base.Parent = self.instance.Hotbar
     Base.Size = UDim2.new(table.unpack(Size))
-    
+    local CooldownIndicator = game:GetObjects(getcustomasset("TSBCustom/Cooldown.rbxm"))[1]
+    CooldownIndicator.Parent = Base
+    CooldownIndicator.AnchorPoint = Vector2.new(0.5, 1)
+    CooldownIndicator.Transparency = 1
     if Side == "Left" then
         Base.LayoutOrder = 0
     elseif Side == "Right" then
@@ -272,25 +281,19 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     end
     
     Base:SetAttribute("IsOnCooldown", false)
+    Base:SetAttribute("CooldownTime", cooldownTime)
     
     local function triggerMove()
         if not Base:GetAttribute("IsOnCooldown") then
-            func()
-            if cooldownTime > 0 then
-                Base:SetAttribute("IsOnCooldown", true)
-                task.delay(cooldownTime, function()
-                    if Base and Base.Parent then
-                        Base:SetAttribute("IsOnCooldown", false)
-                    end
-                end)
-            end
+            func()                     
+            self:StartCooldown(Bind) 
         end
     end
-    
+
     if Base.Base:IsA("TextButton") then
         self.trove:Connect(Base.Base.MouseButton1Click, triggerMove)
     end
-    
+    self.moves[Bind] = Base
     local isNumber = tonumber(Bind) ~= nil and #Bind == 1
     local keyCode = Enum.KeyCode[Bind]
     local keypadCode = nil
@@ -308,6 +311,33 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     
  
     table.insert(getgenv().troves, self.trove)
+end
+
+function Hotbar:StartCooldown(bind)
+    local Base = self.moves[bind]
+    if Base then
+        local cooldownTime = Base:GetAttribute("CooldownTime")
+        if not Base:GetAttribute("IsOnCooldown") and cooldownTime > 0 then
+            Base:SetAttribute("IsOnCooldown", true)
+            local CooldownIndicator = Base:FindFirstChild("Cooldown")
+            CooldownIndicator.Transparency = .5
+            if CooldownIndicator then
+                CooldownIndicator.Size = UDim2.new(1, 0, 1, 0)
+                local tweenInfo = TweenInfo.new(cooldownTime, Enum.EasingStyle.Linear)
+                local tween = game:GetService("TweenService"):Create(
+                    CooldownIndicator,
+                    tweenInfo,
+                    {Size = UDim2.new(1, 0, 0, 0)}
+                )
+                tween:Play()
+            end
+            task.delay(cooldownTime, function()
+                if Base and Base.Parent then
+                    Base:SetAttribute("IsOnCooldown", false)
+                end
+            end)
+        end
+    end
 end
 
 function CustomTemplate.Hotbar(side)
