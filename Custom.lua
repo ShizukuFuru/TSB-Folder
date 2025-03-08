@@ -11,7 +11,7 @@ local UserInputService = game:GetService("UserInputService")
 local Trove = loadstring(game:HttpGet("https://raw.githubusercontent.com/skibiditoiletfan2007/ScriptPackages/main/Trove0_4_1.lua"))()
 
 ---idkss
-local troves = {}
+getgenv().troves = {}
 
 --- thing
 function CustomTemplate.Loop(type, func)
@@ -107,12 +107,13 @@ function CustomTemplate.GetNearest()
 end
 
 function CustomTemplate.CleanupTrove()
-    for _, trove in pairs(troves) do
-        trove:Destroy() 
+    for _, trove in next, getgenv().troves do
         print(trove)
+        trove:Clean() 
         print("hiiiii")
     end
-    troves = {} 
+    getgenv().troves = {} 
+    print("yoo")
 end
 local clonedCharacter = nil
 local isCloneFollowToggled = false
@@ -304,11 +305,10 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
         end
     end)
     
-    table.insert(troves, self.trove)
+ 
+    table.insert(getgenv().troves, self.trove)
 end
 
 function CustomTemplate.Hotbar(side)
     return Hotbar.new(side)
 end
-
-return CustomTemplate
