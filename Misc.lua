@@ -1,6 +1,8 @@
 local Misc = {}
 
 local CT = loadstring(game:HttpGet("https://raw.githubusercontent.com/ShizukuFuru/TSB-Folder/refs/heads/main/Custom.lua"))()
+local Promise = loadstring(game:HttpGet("https://raw.githubusercontent.com/ProudNamed/ScriptPackages/refs/heads/main/Promise4_0_0.lua"))()
+
 local RunService = game:GetService("RunService")
 
 local hiddenfling = false 
