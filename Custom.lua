@@ -286,13 +286,14 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
         end
     end
     
+
     Base:SetAttribute("IsOnCooldown", false)
     Base:SetAttribute("CooldownTime", cooldownTime)
     
     local function triggerMove()
         if not Base:GetAttribute("IsOnCooldown") then
-            func()                     
             self:StartCooldown(Bind) 
+            task.spawn(func)                     
         end
     end
 
@@ -319,31 +320,33 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
 end
 
 function Hotbar:StartCooldown(bind)
-    local Base = self.moves[bind]
-    if Base then
-        local cooldownTime = Base:GetAttribute("CooldownTime")
-        if not Base:GetAttribute("IsOnCooldown") and cooldownTime > 0 then
-            Base:SetAttribute("IsOnCooldown", true)
-            local CooldownIndicator = Base:FindFirstChild("Cooldown")
-            CooldownIndicator.Transparency = .5
-            if CooldownIndicator then
+    task.spawn(function()
+        local Base = self.moves[bind]
+        if Base then
+            local cooldownTime = Base:GetAttribute("CooldownTime")
+            if not Base:GetAttribute("IsOnCooldown") and cooldownTime > 0 then
                 Base:SetAttribute("IsOnCooldown", true)
-                CooldownIndicator.Size = UDim2.new(1, 0, 1, 0)
-                local tweenInfo = TweenInfo.new(cooldownTime, Enum.EasingStyle.Linear)
-                local tween = game:GetService("TweenService"):Create(
-                    CooldownIndicator,
-                    tweenInfo,
-                    {Size = UDim2.new(1, 0, 0, 0)}
-                )
-                tween:Play()
-            end
-            task.delay(cooldownTime, function()
-                if Base and Base.Parent then
-                    Base:SetAttribute("IsOnCooldown", false)
+                local CooldownIndicator = Base:FindFirstChild("Cooldown")
+                CooldownIndicator.Transparency = .5
+                if CooldownIndicator then
+                    Base:SetAttribute("IsOnCooldown", true)
+                    CooldownIndicator.Size = UDim2.new(1, 0, 1, 0)
+                    local tweenInfo = TweenInfo.new(cooldownTime, Enum.EasingStyle.Linear)
+                    local tween = game:GetService("TweenService"):Create(
+                        CooldownIndicator,
+                        tweenInfo,
+                        {Size = UDim2.new(1, 0, 0, 0)}
+                    )
+                    tween:Play()
                 end
-            end)
+                task.delay(cooldownTime, function()
+                    if Base and Base.Parent then
+                        Base:SetAttribute("IsOnCooldown", false)
+                    end
+                end)
+            end
         end
-    end
+    end)
 end
 
 function Hotbar:DestroyTrove()
