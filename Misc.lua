@@ -200,6 +200,13 @@ function Misc.SetProperties(Model, prop, value)
 		end
 	end)
 end
+function Misc.SetPropertyOnce(Model, descendantType, propertyName, value)
+    for _, descendant in ipairs(Model:GetDescendants()) do
+        if descendant:IsA(descendantType) and descendant[propertyName] ~= nil then
+            descendant[propertyName] = value
+        end
+    end
+end
 
 return Misc
  

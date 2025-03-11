@@ -1,49 +1,13 @@
-function equipKatanaAndSheath()
-    local Katana = Katana:Clone()
-    Katana.Parent = CustomTemplate.Character()
-    unanchor(Katana)
+local CT = loadstring(game:HttpGet("https://raw.githubusercontent.com/ShizukuFuru/TSB-Folder/refs/heads/main/Custom.lua"))()
+local RunService = game:GetService("RunService")
+ 
+CT.CleanupMoves() 
 
+local Katana = CT.AddRbxasset("rbxassetid://107205958891711", game.ReplicatedStorage)
+Katana.Name = "Katana"
 
-    KatanaMotor = Instance.new("Motor6D", CustomTemplate.Character()["Torso"])
-    KatanaMotor.Part0, KatanaMotor.Part1, KatanaMotor.Name = CustomTemplate.Character()["Right Arm"], Katana:WaitForChild("WeaponHold"), "Sigma"
-
-    --Mirror(Character["#KatanaWEAPON"]["Main"]["Slash"], "Enabled", Katana.Main["Trail2"], "Enabled")
-
-    Mirror(CustomTemplate.Character()["Right Arm"]:WaitForChild("WeaponHold"), "C0", KatanaMotor, "C0")
-    Mirror(CustomTemplate.Character()["Right Arm"]:WaitForChild("WeaponHold"), "Part0", KatanaMotor, "Part0")
-    MirrorAngle(CustomTemplate.Character()["Right Arm"]:WaitForChild("WeaponHold"), KatanaMotor)
-
-    SetProperties(CustomTemplate.Character()["#KatanaWEAPON"], "Transparency", 1)
-    SetProperties(CustomTemplate.Character()["Sheathe"], "Transparency", 1)
-
-    print(KatanaMotor)
-    if KatanaMotor.Part0 == CustomTemplate.Character()["Right Arm"] then
-        --SetPropertyOnce(Katana, "ParticleEmitter", "Enabled", true)
-    else
-        --SetPropertyOnce(Katana, "ParticleEmitter", "Enabled", false)
-    end
-    CustomTemplate.Character()["#KatanaWEAPON"]:GetAttributeChangedSignal("LastFlames"):Connect(function(Value)
-        if CustomTemplate.Character()["#KatanaWEAPON"]:GetAttribute("LastFlames") == true then
-            PHandler.EnableParticle(Katana, true)
-            PHandler.EnableParticleBeams(Katana, true)
-            PHandler.EnableParticle(CustomTemplate.Character()["#KatanaWEAPON"], false)
-            PHandler.EnableParticleBeams(CustomTemplate.Character()["#KatanaWEAPON"], false)
-            SetPropertyOnce(Katana, "ParticleEmitter", "LockedToPart", true)
-        else
-            PHandler.EnableParticle(Katana, false)
-            PHandler.EnableParticleBeams(Katana, false)
-        end 
-    end)
-    KatanaMotor:GetPropertyChangedSignal("Part0"):Connect(function()
-        if KatanaMotor.Part0 == CustomTemplate.Character()["Right Arm"] then
-            --SetPropertyOnce(Katana, "ParticleEmitter", "Enabled", true)
-        else
-            --SetPropertyOnce(Katana, "ParticleEmitter", "Enabled", false)
-        end
-    end)
-end
 local function equipKatanaAndSheath()
-    local Character = CustomTemplate.Character()
+    local Character = CT.Character()
     local RightArm = Character:FindFirstChild("Right Arm")
     local Torso = Character:FindFirstChild("Torso")
     local KatanaWeapon = Character:FindFirstChild("#KatanaWEAPON")
@@ -89,3 +53,56 @@ local function equipKatanaAndSheath()
         SetPropertyOnce(Katana, "ParticleEmitter", "Enabled", isEquipped)
     end)
 end
+
+
+function FalseTeleport(CFrame, enable)
+    if enable then
+        if teleportConnection then
+            teleportConnection:Disconnect()
+            teleportConnection = nil
+        end
+
+        local originalCFrame = CT.RootPart().CFrame
+
+        teleportConnection = RunService.Heartbeat:Connect(function()
+			CT.RootPart().CFrame = CFrame
+            RunService.RenderStepped:Wait()
+            CT.RootPart().CFrame = originalCFrame
+        end)
+    else
+        if teleportConnection then
+            teleportConnection:Disconnect()
+            teleportConnection = nil
+        end
+    end
+end
+ 
+
+local hotbar = CT.Hotbar("Right")
+hotbar:NewMove("R", "Switch Mode", {0, 50, 0, 50}, "Right", 5, function()
+    FalseTeleport(CFrame.new(-100, -100, 0), true)
+    CT.CloneFollow(true, false)
+    task.wait(.1)
+    CT.Character().Communicate:FireServer({
+                Dash = Enum.KeyCode.W,
+                Key = Enum.KeyCode.Q,
+                Goal = "KeyPress"
+            })
+    task.wait(.3)
+    if CT.RootPart():FindFirstChild("moveme") then CT.RootPart():FindFirstChild("moveme"):Destroy() end
+    FalseTeleport(CT.RootPart().CFrame * CFrame.new(0, -50, 0), false)
+    CT.CloneFollow(false)
+end)
+task.wait(1)
+--hotbar:StartCooldown("R")
+CT.SetUpAnimation()
+CT.AnimationEvents("rbxassetid://13380255751", function(anim)
+    anim:Stop()
+    local newAnim = Instance.new("Animation")
+    newAnim.AnimationId = "rbxassetid://140164642047188"
+    local newAnimTrack = game.Players.LocalPlayer.Character.Humanoid:LoadAnimation(newAnim)
+    newAnimTrack:Play()
+    newAnimTrack.TimePosition = 7
+    task.wait(1)
+    newAnimTrack:Stop(.5)
+end)
