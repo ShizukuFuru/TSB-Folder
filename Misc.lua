@@ -146,5 +146,60 @@ function Misc.AddAccessory(id, AttachmentPoint)
     end
 end
 
+function Misc.unanchor(instance)
+    for _, desc in ipairs(instance:GetDescendants()) do
+        if desc:IsA("BasePart") then
+            desc.Anchored = false
+        end
+    end
+end
+
+function Misc.Mirror(source, sourceProp, target, targetProp)
+    if not (source and target and source[sourceProp] ~= nil and target[targetProp] ~= nil) then return end
+    target[targetProp] = source[sourceProp]
+    source:GetPropertyChangedSignal(sourceProp):Connect(function()
+        target[targetProp] = source[sourceProp]
+    end)
+end
+
+function Misc.MirrorAngle(source, target)  
+    return Promise.new(function(resolve, reject)
+		local ok, result = pcall(function()
+            task.spawn(function()
+                while source and target and source.Parent do
+                    target.CurrentAngle = source.CurrentAngle
+                    task.wait()
+                end
+            end)
+        end)
+		if ok then
+			resolve(result)
+		else
+			reject(result)
+		end
+	end)
+end
+
+function Misc.SetProperties(Model, prop, value)
+    return Promise.new(function(resolve, reject)
+		local ok, result = pcall(function()
+            for _, desc in ipairs(Model:GetDescendants()) do
+                task.spawn(function()
+                    while task.wait() do
+                        if desc:IsA("BasePart") or desc:IsA("Part") then
+                            desc[prop] = value    
+                        end
+                    end
+                end)
+            end
+        end)
+		if ok then
+			resolve(result)
+		else
+			reject(result)
+		end
+	end)
+end
+
 return Misc
  
