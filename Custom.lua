@@ -238,7 +238,7 @@ function Hotbar.new(side)
     self.trove = Trove.new()
     self.moves = {}
     table.insert(getgenv().moves, self.trove)
-    -- Load the appropriate Hotbar instance based on the side
+
     if side == "L" or side == "Left" then
         self.instance = game:GetObjects(getcustomasset("TSBCustom/LeftHotBar.rbxm"))[1]
     elseif side == "R" or side == "Right" then
@@ -300,7 +300,7 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     if Base.Base:IsA("TextButton") then
         self.trove:Connect(Base.Base.MouseButton1Click, triggerMove)
     end
-    self.moves[Bind] = Base
+    self.moves[Name] = Base
     local isNumber = tonumber(Bind) ~= nil and #Bind == 1
     local keyCode = Enum.KeyCode[Bind]
     local keypadCode = nil
