@@ -292,7 +292,7 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     
     local function triggerMove()
         if not Base:GetAttribute("IsOnCooldown") then
-            self:StartCooldown(Bind) 
+            self:StartCooldown(Name) 
             task.spawn(func)                     
         end
     end

@@ -181,27 +181,38 @@ function Misc.MirrorAngle(source, target)
 		end
 	end)
 end
-
-function Misc.SetProperties(Model, prop, value)
-    return Promise.new(function(resolve, reject)
-		local ok, result = pcall(function()
-            for _, desc in ipairs(Model:GetDescendants()) do
-                task.spawn(function()
-                    while task.wait() do
-                        if desc:IsA("BasePart") or desc:IsA("Part") then
-                            desc[prop] = value    
+function Misc.SetProperties(Model, prop, value, exclusion)
+    local ok, result = pcall(function()
+        for _, desc in ipairs(Model:GetDescendants()) do
+            if desc:IsA("BasePart") then  -- Part is a subclass of BasePart
+                local shouldExclude = false
+                if type(exclusion) == "table" then
+                    for _, exclude in ipairs(exclusion) do
+                        if desc == exclude or desc.Name == exclude then
+                            shouldExclude = true
+                            break  
                         end
                     end
-                end)
+                elseif exclusion then 
+                    if desc == exclusion or desc.Name == exclusion then
+                        shouldExclude = true
+                    end
+                end
+                if not shouldExclude then
+                    task.spawn(function()
+                        while task.wait() do
+                            desc[prop] = value  
+                        end
+                    end)
+                end
             end
-        end)
-		if ok then
-			resolve(result)
-		else
-			reject(result)
-		end
-	end)
+        end
+    end)
+    if not ok then
+        warn("Error in SetProperties: " .. result)
+    end
 end
+
 function Misc.SetPropertyOnce(Model, descendantType, propertyName, value)
     for _, descendant in ipairs(Model:GetDescendants()) do
         if descendant:IsA(descendantType) and descendant[propertyName] ~= nil then
