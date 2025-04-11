@@ -12,13 +12,42 @@ local Trove = loadstring(game:HttpGet("https://raw.githubusercontent.com/skibidi
 
 ---idkss
 local shitteryLock = true
+
 getgenv().moves = getgenv().moves or {}
-getgenv().animationFuncs = {}
+getgenv().animationFuncs = getgenv().animationFuncs or {}
+getgenv().connections = getgenv().connections or {}
+
 --- thing
+
+local function DestroySignals()
+	for i,v in pairs(getgenv().connections) do
+		if typeof(v) == "RBXScriptConnection" then
+			v:Disconnect()
+		end
+	end
+end
+
+local function SetupSignals()
+	if getgenv().connections then
+		DestroySignals()
+	else
+		getgenv().connections = {}
+	end
+end
+
+local function AddSignal(connection, name)
+    print(name)
+	if getgenv().connections then
+		getgenv().connections[name or #getgenv().connections + 1] = connection
+		return connection
+	end
+end
+-- thank agent i love skidign
+
 function CustomTemplate.Loop(type, func)
     local connection
     coroutine.wrap(function()
-        connection = RunService[type]:Connect(func)
+        connection = AddSignal(RunService[type]:Connect(func), "Loop")
     end)()
     return connection
 end
@@ -111,10 +140,10 @@ end
 function CustomTemplate.CleanupMoves()
     print("god damn it")
     for i, trove in pairs(getgenv().moves) do
-        trove:Clean() 
+        trove:Clean()
         print("are you sure this is happening")
     end
-    getgenv().moves = {} 
+    getgenv().moves = {}
 end
 local clonedCharacter = nil
 local isCloneFollowToggled = false
@@ -229,7 +258,7 @@ function CustomTemplate.Cinematic(Cutscene)
         end
     end)
 end
- 
+
 local Hotbar = {}
 Hotbar.__index = Hotbar
 
@@ -270,30 +299,30 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     elseif Side == "Right" then
         Base.LayoutOrder = 2
     end
-    
+
     if Base.Size.X.Offset < 60 or Base.Size.Y.Offset < 60 then
         Base.Base.Number.Size = UDim2.new(0.2, 0, 0.2, 0)
     end
-    
+
     if Base.Base.ToolName then
         Base.Base.ToolName.Text = Name
     end
-    
+
     if Base.Base.Number then
         Base.Base.Number.Text = Bind
         if Base.Base.Number.Number then
             Base.Base.Number.Number.Text = Bind
         end
     end
-    
+
 
     Base:SetAttribute("IsOnCooldown", false)
     Base:SetAttribute("CooldownTime", cooldownTime)
-    
+
     local function triggerMove()
         if not Base:GetAttribute("IsOnCooldown") then
-            self:StartCooldown(Name) 
-            task.spawn(func)                     
+            self:StartCooldown(Name)
+            task.spawn(func)
         end
     end
 
@@ -307,7 +336,7 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     if isNumber then
         keypadCode = Enum.KeyCode["Keypad" .. Bind]
     end
-    
+
     self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
         if not gameProcessed then
             if input.KeyCode == keyCode or (isNumber and input.KeyCode == keypadCode) then
@@ -372,8 +401,69 @@ function CustomTemplate.SetUpAnimation()
     setupAnimationDetection()
     CustomTemplate.Player().CharacterAdded:Connect(setupAnimationDetection)
 end
+
 function CustomTemplate.AnimationEvents(animId, func)
     animationFuncs[animId] = func
+end
+
+local AnimList = {["rbxassetid://13380255751"] = {Events = function(Anim, Enemy) end, HitEvents = function(Anim, Enemy) end}}
+
+function CustomTemplate.SetUpAnimationEvents(animList)
+    local activeEntries = {}
+    local function hitDetection(hitChar)
+        if getgenv().connections and getgenv().connections[hitchar.Name] then
+            getgenv().connections[hitChar.Name]:Disconnect()
+        end
+        local humanoid = hitChar:FindFirstChild("Humanoid")
+        if humanoid then
+            AddSignal(humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+                if humanoid:GetAttribute("LastHitted") == CustomTemplate.Player().Name then
+                    for _, entry in ipair(activeEntries) do
+                        entry.Events(entry.Track, hitChar)
+                    end
+                end
+            end), hitChar.Name)
+        end
+    end
+    local function setUpListener()
+        for _, model in ipairs(workspace.Live:GetChildren()) do
+            if model:IsA("Model") and model:FindFirstChild("Humanoid") then
+                hitDetection(model)
+            end
+        end
+        AddSignal(workspace.Live.ChildAdded:Connect(function(model)
+            task.wait(.3)
+            if model:IsA("Model") and model:FindFirstChild("Humanoid") then
+                hitDetection(model)
+            end
+        end), "ChildAdded")
+    end
+    setUpListener()
+    local function setupAnimationDetection()
+        AddSignal(CustomTemplate.Humanoid().AnimationPlayed:Connect(function(animationTrack)
+            local animId = animationTrack.Animation.AnimationId
+            local animData = animList[animId]
+            if animData.Events then
+                animData.Events(animationTrack, nil)
+            end
+            if animData.HitEvents then
+                local entry = {track = animationTrack, hitEvent = animData.HitEvents}
+                table.insert(activeEntries, entry)
+                local stoppedConnection
+                stoppedConnection = animationTrack.Stopped:Connect(function()
+                    stoppedConnection:Disconnect()
+                    for i, e in ipairs(activeEntries) do
+                        if e == entry then
+                            table.remove(activeEntries, i)
+                            break
+                        end
+                    end
+                end)
+            end
+        end), "AnimationPlayed")
+    end
+    setupAnimationDetection()
+    AddSignal(CustomTemplate.Player().CharacterAdded:Connect(setupAnimationDetection), "CharacterAdded")
 end
 
 return CustomTemplate
