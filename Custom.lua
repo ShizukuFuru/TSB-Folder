@@ -34,7 +34,7 @@ local function SetupSignals()
 		getgenv().connections = {}
 	end
 end
-
+SetupSignals()
 local function AddSignal(connection, name)
     print(name)
 	if getgenv().connections then
@@ -47,7 +47,7 @@ end
 function CustomTemplate.Loop(type, func)
     local connection
     coroutine.wrap(function()
-        connection = AddSignal(RunService[type]:Connect(func), "Loop")
+        connection = AddSignal(RunService[type]:Connect(func))
     end)()
     return connection
 end
@@ -406,20 +406,19 @@ function CustomTemplate.AnimationEvents(animId, func)
     animationFuncs[animId] = func
 end
 
-local AnimList = {["rbxassetid://13380255751"] = {Events = function(Anim, Enemy) end, HitEvents = function(Anim, Enemy) end}}
 
+local activeEntries = {}
 function CustomTemplate.SetUpAnimationEvents(animList)
-    local activeEntries = {}
     local function hitDetection(hitChar)
-        if getgenv().connections and getgenv().connections[hitchar.Name] then
+        if getgenv().connections and getgenv().connections[hitChar.Name] then
             getgenv().connections[hitChar.Name]:Disconnect()
         end
         local humanoid = hitChar:FindFirstChild("Humanoid")
         if humanoid then
             AddSignal(humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-                if humanoid:GetAttribute("LastHitted") == CustomTemplate.Player().Name then
-                    for _, entry in ipair(activeEntries) do
-                        entry.Events(entry.Track, hitChar)
+                if hitChar:GetAttribute("LastHit") == CustomTemplate.Player().Name then
+                    for _, entry in ipairs(activeEntries) do
+                        entry.hitEvent(entry.track, hitChar)
                     end
                 end
             end), hitChar.Name)
@@ -442,23 +441,26 @@ function CustomTemplate.SetUpAnimationEvents(animList)
     local function setupAnimationDetection()
         AddSignal(CustomTemplate.Humanoid().AnimationPlayed:Connect(function(animationTrack)
             local animId = animationTrack.Animation.AnimationId
-            local animData = animList[animId]
-            if animData.Events then
-                animData.Events(animationTrack, nil)
-            end
-            if animData.HitEvents then
-                local entry = {track = animationTrack, hitEvent = animData.HitEvents}
-                table.insert(activeEntries, entry)
-                local stoppedConnection
-                stoppedConnection = animationTrack.Stopped:Connect(function()
-                    stoppedConnection:Disconnect()
-                    for i, e in ipairs(activeEntries) do
-                        if e == entry then
-                            table.remove(activeEntries, i)
-                            break
+            --print(animId)
+            local animData = animList[animId]   
+            if animData then
+                if animData.Events and animData then
+                    animData.Events(animationTrack, nil)
+                end
+                if animData.HitEvents and animData then
+                    local entry = {track = animationTrack, hitEvent = animData.HitEvents}
+                    table.insert(activeEntries, entry)
+                    local stoppedConnection
+                    stoppedConnection = animationTrack.Stopped:Connect(function()
+                        stoppedConnection:Disconnect()
+                        for i, e in ipairs(activeEntries) do
+                            if e == entry then
+                                table.remove(activeEntries, i)
+                                break
+                            end
                         end
-                    end
-                end)
+                    end)
+                end
             end
         end), "AnimationPlayed")
     end
