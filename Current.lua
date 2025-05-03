@@ -1,5 +1,5 @@
-local CT = loadfile("TSB Folder/Custom.lua")()
-local Misc = loadfile("TSB Folder/Misc.lua")()
+local CT = loadstring(game:HttpGet("https://raw.githubusercontent.com/ShizukuFuru/TSB-Folder/refs/heads/main/Custom.lua"))()
+local Misc = loadstring(game:HttpGet("https://raw.githubusercontent.com/ShizukuFuru/TSB-Folder/refs/heads/main/Misc.lua"))()
 local PHandler = loadstring(game:HttpGet("https://raw.githubusercontent.com/skibiditoiletfan2007/ScriptPackages/main/ParticleHandlerAUT.lua"))()
 
 local RunService = game:GetService("RunService")
