@@ -23,6 +23,7 @@ local function DestroySignals()
 	for i,v in pairs(getgenv().connections) do
 		if typeof(v) == "RBXScriptConnection" then
 			v:Disconnect()
+            getgenv().connections = {}
 		end
 	end
 end
@@ -65,11 +66,11 @@ function CustomTemplate.Character()
 end
 
 function CustomTemplate.Humanoid()
-    return CustomTemplate.Character() and CustomTemplate.Character():FindFirstChildWhichIsA("Humanoid")
+    return CustomTemplate.Character() and (CustomTemplate.Character():FindFirstChildWhichIsA("Humanoid") or CustomTemplate.Character():WaitForChild("Humanoid"))
 end
 
 function CustomTemplate.RootPart()
-    return CustomTemplate.Character() and CustomTemplate.Character():FindFirstChild("HumanoidRootPart")
+    return CustomTemplate.Character() and (CustomTemplate.Character():FindFirstChild("HumanoidRootPart") or CustomTemplate.Character():WaitForChild("HumanoidRootPart"))
 end
 
 --Creation function
@@ -100,13 +101,12 @@ function CustomTemplate.AddRbxasset(rbxasset, parent)
     return asset
 end
 
-function CustomTemplate.Download(repo, rawFile)
-    local folderName = "TSBCustom"
-    local filePath = folderName .. "/" .. rawFile
+function CustomTemplate.Download(repo, rawFile, customFolder)
+    local filePath = customFolder .. "/" .. rawFile
 
     if not isfile(filePath) then
-        if not isfolder(folderName) then
-            makefolder(folderName)
+        if not isfolder(customFolder) then
+            makefolder(customFolder)
         end
         writefile(filePath, game:HttpGet("https://raw.githubusercontent.com/" .. repo .. "/refs/heads/main/" .. rawFile))
         -- print("File written: " .. filePath)
@@ -115,10 +115,10 @@ function CustomTemplate.Download(repo, rawFile)
     end
 end
 
-CustomTemplate.Download("ShizukuFuru/TSB", "Base.rbxm")
-CustomTemplate.Download("ShizukuFuru/TSB", "LeftHotBar.rbxm")
-CustomTemplate.Download("ShizukuFuru/TSB", "RightHotBar.rbxm")
-CustomTemplate.Download("ShizukuFuru/TSB", "Cooldown.rbxm")
+CustomTemplate.Download("ShizukuFuru/TSB", "Base.rbxm", "TSBCustom")
+CustomTemplate.Download("ShizukuFuru/TSB", "LeftHotBar.rbxm", "TSBCustom")
+CustomTemplate.Download("ShizukuFuru/TSB", "RightHotBar.rbxm", "TSBCustom")
+CustomTemplate.Download("ShizukuFuru/TSB", "Cooldown.rbxm", "TSBCustom")
 
 -- FeraFunction
 function CustomTemplate.GetNearest()
@@ -418,7 +418,9 @@ function CustomTemplate.SetUpAnimationEvents(animList)
             AddSignal(humanoid:GetPropertyChangedSignal("Health"):Connect(function()
                 if hitChar:GetAttribute("LastHit") == CustomTemplate.Player().Name then
                     for _, entry in ipairs(activeEntries) do
-                        entry.hitEvent(entry.track, hitChar)
+                        task.spawn(function()
+                            entry.hitEvent(entry.track, hitChar)
+                        end)
                     end
                 end
             end), hitChar.Name)
@@ -435,7 +437,7 @@ function CustomTemplate.SetUpAnimationEvents(animList)
             if model:IsA("Model") and model:FindFirstChild("Humanoid") then
                 hitDetection(model)
             end
-        end), "ChildAdded")
+        end))
     end
     setUpListener()
     local function setupAnimationDetection()
@@ -445,7 +447,9 @@ function CustomTemplate.SetUpAnimationEvents(animList)
             local animData = animList[animId]   
             if animData then
                 if animData.Events and animData then
-                    animData.Events(animationTrack, nil)
+                    task.spawn(function()
+                        animData.Events(animationTrack, nil)
+                    end)
                 end
                 if animData.HitEvents and animData then
                     local entry = {track = animationTrack, hitEvent = animData.HitEvents}
@@ -462,7 +466,7 @@ function CustomTemplate.SetUpAnimationEvents(animList)
                     end)
                 end
             end
-        end), "AnimationPlayed")
+        end))
     end
     setupAnimationDetection()
     AddSignal(CustomTemplate.Player().CharacterAdded:Connect(setupAnimationDetection), "CharacterAdded")
