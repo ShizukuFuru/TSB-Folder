@@ -20,12 +20,17 @@ getgenv().connections = getgenv().connections or {}
 --- thing
 
 local function DestroySignals()
-	for i,v in pairs(getgenv().connections) do
-		if typeof(v) == "RBXScriptConnection" then
-			v:Disconnect()
-            getgenv().connections = {}
-		end
-	end
+    if not getgenv().connections then 
+        getgenv().connections = {}
+        return 
+    end
+    
+    for i, v in pairs(getgenv().connections) do
+        if typeof(v) == "RBXScriptConnection" then
+            v:Disconnect()
+        end
+    end
+    getgenv().connections = {}
 end
 
 local function SetupSignals()
@@ -37,7 +42,6 @@ local function SetupSignals()
 end
 SetupSignals()
 local function AddSignal(connection, name)
-    print(name)
 	if getgenv().connections then
 		getgenv().connections[name or #getgenv().connections + 1] = connection
 		return connection
@@ -290,10 +294,12 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
     local Base = game:GetObjects(getcustomasset("TSBCustom/Base.rbxm"))[1]
     Base.Parent = self.instance.Hotbar
     Base.Size = UDim2.new(table.unpack(Size))
+    
     local CooldownIndicator = game:GetObjects(getcustomasset("TSBCustom/Cooldown.rbxm"))[1]
     CooldownIndicator.Parent = Base
     CooldownIndicator.AnchorPoint = Vector2.new(0.5, 1)
     CooldownIndicator.Transparency = 1
+    
     if Side == "Left" then
         Base.LayoutOrder = 0
     elseif Side == "Right" then
@@ -315,7 +321,6 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
         end
     end
 
-
     Base:SetAttribute("IsOnCooldown", false)
     Base:SetAttribute("CooldownTime", cooldownTime)
 
@@ -326,10 +331,11 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
         end
     end
 
+    local mouseConnection
     if Base.Base:IsA("TextButton") then
-        self.trove:Connect(Base.Base.MouseButton1Click, triggerMove)
+        mouseConnection = self.trove:Connect(Base.Base.MouseButton1Click, triggerMove)
     end
-    self.moves[Name] = Base
+
     local isNumber = tonumber(Bind) ~= nil and #Bind == 1
     local keyCode = Enum.KeyCode[Bind]
     local keypadCode = nil
@@ -337,28 +343,172 @@ function Hotbar:NewMove(Bind, Name, Size, Side, cooldownTime, func)
         keypadCode = Enum.KeyCode["Keypad" .. Bind]
     end
 
-    self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
+    local keyConnection = self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
         if not gameProcessed then
             if input.KeyCode == keyCode or (isNumber and input.KeyCode == keypadCode) then
                 triggerMove()
             end
         end
     end)
-    
-     
+
+    self.moves[Name] = {
+        Base = Base,
+        Bind = Bind,
+        Size = Size,
+        Side = Side,
+        cooldownTime = cooldownTime,
+        func = func,
+        mouseConnection = mouseConnection,
+        keyConnection = keyConnection,
+        triggerFunction = triggerMove
+    }
 end
 
-function Hotbar:StartCooldown(bind)
+function Hotbar:EditMove(Name, options)
+    local move = self.moves[Name]
+    if not move then
+        warn("Move '" .. Name .. "' not found!")
+        return false
+    end
+
+    local Base = move.Base
+    
+    if options.Bind then
+        move.Bind = options.Bind
+        
+        if Base.Base.Number then
+            Base.Base.Number.Text = options.Bind
+            if Base.Base.Number.Number then
+                Base.Base.Number.Number.Text = options.Bind
+            end
+        end
+        
+        if move.keyConnection then
+            move.keyConnection:Disconnect()
+        end
+        
+        local isNumber = tonumber(options.Bind) ~= nil and #options.Bind == 1
+        local keyCode = Enum.KeyCode[options.Bind]
+        local keypadCode = nil
+        if isNumber then
+            keypadCode = Enum.KeyCode["Keypad" .. options.Bind]
+        end
+
+        move.keyConnection = self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
+            if not gameProcessed then
+                if input.KeyCode == keyCode or (isNumber and input.KeyCode == keypadCode) then
+                    move.triggerFunction()
+                end
+            end
+        end)
+    end
+
+    if options.Name then
+        self.moves[options.Name] = move
+        self.moves[Name] = nil
+        
+        if Base.Base.ToolName then
+            Base.Base.ToolName.Text = options.Name
+        end
+        
+        Name = options.Name
+    end
+
+    if options.Size then
+        move.Size = options.Size
+        Base.Size = UDim2.new(table.unpack(options.Size))
+        
+        if Base.Size.X.Offset < 60 or Base.Size.Y.Offset < 60 then
+            Base.Base.Number.Size = UDim2.new(0.2, 0, 0.2, 0)
+        else
+            Base.Base.Number.Size = UDim2.new(0.3, 0, 0.3, 0)
+        end
+    end
+
+    if options.Side then
+        move.Side = options.Side
+        if options.Side == "Left" then
+            Base.LayoutOrder = 0
+        elseif options.Side == "Right" then
+            Base.LayoutOrder = 2
+        end
+    end
+
+    if options.cooldownTime then
+        move.cooldownTime = options.cooldownTime
+        Base:SetAttribute("CooldownTime", options.cooldownTime)
+    end
+
+    if options.func then
+        move.func = options.func
+        
+        local function newTriggerMove()
+            if not Base:GetAttribute("IsOnCooldown") then
+                self:StartCooldown(Name)
+                task.spawn(options.func)
+            end
+        end
+        
+        move.triggerFunction = newTriggerMove
+        
+        if move.mouseConnection then
+            move.mouseConnection:Disconnect()
+        end
+        
+        if Base.Base:IsA("TextButton") then
+            move.mouseConnection = self.trove:Connect(Base.Base.MouseButton1Click, newTriggerMove)
+        end
+        
+        if move.keyConnection then
+            move.keyConnection:Disconnect()
+            
+            local isNumber = tonumber(move.Bind) ~= nil and #move.Bind == 1
+            local keyCode = Enum.KeyCode[move.Bind]
+            local keypadCode = nil
+            if isNumber then
+                keypadCode = Enum.KeyCode["Keypad" .. move.Bind]
+            end
+
+            move.keyConnection = self.trove:Connect(game:GetService("UserInputService").InputBegan, function(input, gameProcessed)
+                if not gameProcessed then
+                    if input.KeyCode == keyCode or (isNumber and input.KeyCode == keypadCode) then
+                        newTriggerMove()
+                    end
+                end
+            end)
+        end
+    end
+
+    return true
+end
+
+function Hotbar:GetMoveInfo(Name)
+    local move = self.moves[Name]
+    if not move then
+        return nil
+    end
+    
+    return {
+        Name = Name,
+        Bind = move.Bind,
+        Size = move.Size,
+        Side = move.Side,
+        cooldownTime = move.cooldownTime,
+        Base = move.Base
+    }
+end
+
+function Hotbar:StartCooldown(moveName)
     task.spawn(function()
-        local Base = self.moves[bind]
-        if Base then
+        local move = self.moves[moveName]
+        if move and move.Base then
+            local Base = move.Base
             local cooldownTime = Base:GetAttribute("CooldownTime")
             if not Base:GetAttribute("IsOnCooldown") and cooldownTime > 0 then
                 Base:SetAttribute("IsOnCooldown", true)
                 local CooldownIndicator = Base:FindFirstChild("Cooldown")
-                CooldownIndicator.Transparency = .5
                 if CooldownIndicator then
-                    Base:SetAttribute("IsOnCooldown", true)
+                    CooldownIndicator.Transparency = .5
                     CooldownIndicator.Size = UDim2.new(1, 0, 1, 0)
                     local tweenInfo = TweenInfo.new(cooldownTime, Enum.EasingStyle.Linear)
                     local tween = game:GetService("TweenService"):Create(
@@ -367,7 +517,14 @@ function Hotbar:StartCooldown(bind)
                         {Size = UDim2.new(1, 0, 0, 0)}
                     )
                     tween:Play()
+                    
+                    tween.Completed:Connect(function()
+                        if CooldownIndicator and CooldownIndicator.Parent then
+                            CooldownIndicator.Transparency = 1
+                        end
+                    end)
                 end
+                
                 task.delay(cooldownTime, function()
                     if Base and Base.Parent then
                         Base:SetAttribute("IsOnCooldown", false)
@@ -377,7 +534,6 @@ function Hotbar:StartCooldown(bind)
         end
     end)
 end
-
 function Hotbar:DestroyTrove()
     if self.trove then
         print("hola seniopr")
@@ -408,68 +564,169 @@ end
 
 
 local activeEntries = {}
+local isInitialized = false
+
 function CustomTemplate.SetUpAnimationEvents(animList)
-    local function hitDetection(hitChar)
-        if getgenv().connections and getgenv().connections[hitChar.Name] then
-            getgenv().connections[hitChar.Name]:Disconnect()
+    if not animList or type(animList) ~= "table" then
+        warn("animList must be a table")
+        return
+    end
+    
+    if isInitialized then
+        return
+    end
+    isInitialized = true
+    
+    local function setupHitDetection(character)
+        if not character or not character:IsA("Model") then return end
+        
+        local characterName = character.Name
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        
+        if not humanoid then return end
+        
+        if getgenv().connections and getgenv().connections["HitDetection_" .. characterName] then 
+            return 
         end
-        local humanoid = hitChar:FindFirstChild("Humanoid")
-        if humanoid then
-            AddSignal(humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-                if hitChar:GetAttribute("LastHit") == CustomTemplate.Player().Name then
-                    for _, entry in ipairs(activeEntries) do
-                        task.spawn(function()
-                            entry.hitEvent(entry.track, hitChar)
-                        end)
+        
+        local healthConnection = humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+            if character:GetAttribute("LastHit") == CustomTemplate.Player().Name then
+                for i = 1, #activeEntries do
+                    local entry = activeEntries[i]
+                    if entry and entry.track and entry.hitEvent then
+                        task.spawn(entry.hitEvent, entry.track, character)
                     end
                 end
-            end), hitChar.Name)
+            end
+        end)
+        
+        AddSignal(healthConnection, "HitDetection_" .. characterName)
+        
+        local cleanupConnection = character.AncestryChanged:Connect(function()
+            if not character.Parent then
+                if getgenv().connections and getgenv().connections["HitDetection_" .. characterName] then
+                    getgenv().connections["HitDetection_" .. characterName]:Disconnect()
+                    getgenv().connections["HitDetection_" .. characterName] = nil
+                end
+            end
+        end)
+        
+        AddSignal(cleanupConnection, "Cleanup_" .. characterName)
+    end
+    
+    local function initializeExistingCharacters()
+        local liveFolder = workspace.Live
+        if not liveFolder then return end
+        
+        local characters = liveFolder:GetChildren()
+        for i = 1, #characters do
+            setupHitDetection(characters[i])
         end
     end
-    local function setUpListener()
-        for _, model in ipairs(workspace.Live:GetChildren()) do
-            if model:IsA("Model") and model:FindFirstChild("Humanoid") then
-                hitDetection(model)
+    
+    local function setupCharacterMonitoring()
+        local liveFolder = workspace.Live
+        if not liveFolder then
+            return
+        end
+        
+        initializeExistingCharacters()
+        
+        AddSignal(liveFolder.ChildAdded:Connect(function(character)
+            task.wait(0.1)
+            setupHitDetection(character)
+        end), "Child Groomed By Dream")
+    end
+    
+    local function cleanupActiveEntry(targetEntry)
+        for i = #activeEntries, 1, -1 do
+            if activeEntries[i] == targetEntry then
+                table.remove(activeEntries, i)
+                break
             end
         end
-        AddSignal(workspace.Live.ChildAdded:Connect(function(model)
-            task.wait(.3)
-            if model:IsA("Model") and model:FindFirstChild("Humanoid") then
-                hitDetection(model)
-            end
-        end))
     end
-    setUpListener()
+    
     local function setupAnimationDetection()
-        AddSignal(CustomTemplate.Humanoid().AnimationPlayed:Connect(function(animationTrack)
+        local humanoid = CustomTemplate.Humanoid()
+        if not humanoid then
+            warn("SetUpAnimationEvents: Humanoid not found")
+            return
+        end
+        
+        AddSignal(humanoid.AnimationPlayed:Connect(function(animationTrack)
             local animId = animationTrack.Animation.AnimationId
-            --print(animId)
-            local animData = animList[animId]   
-            if animData then
-                if animData.Events and animData then
-                    task.spawn(function()
-                        animData.Events(animationTrack, nil)
-                    end)
-                end
-                if animData.HitEvents and animData then
-                    local entry = {track = animationTrack, hitEvent = animData.HitEvents}
-                    table.insert(activeEntries, entry)
-                    local stoppedConnection
-                    stoppedConnection = animationTrack.Stopped:Connect(function()
-                        stoppedConnection:Disconnect()
-                        for i, e in ipairs(activeEntries) do
-                            if e == entry then
-                                table.remove(activeEntries, i)
-                                break
-                            end
-                        end
-                    end)
-                end
+            local animData = animList[animId]
+            
+            if not animData then return end
+            
+            if animData.Events then
+                task.spawn(animData.Events, animationTrack, nil)
             end
-        end))
+            
+            if animData.HitEvents then
+                local entry = {
+                    track = animationTrack,
+                    hitEvent = animData.HitEvents
+                }
+                
+                table.insert(activeEntries, entry)
+                
+                local stoppedConnection = animationTrack.Stopped:Connect(function()
+                    cleanupActiveEntry(entry)
+                end)
+                
+                local uniqueKey = "AnimStopped_" .. tostring(animationTrack):gsub("%s+", "_")
+                AddSignal(stoppedConnection, uniqueKey)
+                
+                local destroyedConnection = animationTrack.AncestryChanged:Connect(function()
+                    if not animationTrack.Parent then
+                        cleanupActiveEntry(entry)
+                    end
+                end)
+                
+                AddSignal(destroyedConnection, uniqueKey .. "_Destroy")
+            end
+        end), "AnimationPlayed")
     end
+    
+    setupCharacterMonitoring()
     setupAnimationDetection()
-    AddSignal(CustomTemplate.Player().CharacterAdded:Connect(setupAnimationDetection), "CharacterAdded")
+    
+    AddSignal(CustomTemplate.Player().CharacterAdded:Connect(function()
+        task.wait(0.1)
+        setupAnimationDetection()
+    end), "CharacterAdded")
+end
+
+
+function CustomTemplate.CleanupAnimationEvents()
+    isInitialized = false
+    table.clear(activeEntries)
+end
+
+function CustomTemplate.GetActiveConnections()
+    if not getgenv().connections then
+        return {
+            totalConnections = 0,
+            activeEntries = #activeEntries,
+            connections = {}
+        }
+    end
+    
+    local connectionInfo = {}
+    local totalCount = 0
+    
+    for name, connection in pairs(getgenv().connections) do
+        connectionInfo[name] = typeof(connection) == "RBXScriptConnection" and "Active" or "Invalid"
+        totalCount = totalCount + 1
+    end
+    
+    return {
+        totalConnections = totalCount,
+        activeEntries = #activeEntries,
+        connections = connectionInfo
+    }
 end
 
 return CustomTemplate
