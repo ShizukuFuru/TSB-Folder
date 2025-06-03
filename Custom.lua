@@ -579,21 +579,19 @@ function CustomTemplate.SetUpAnimationEvents(animList)
     
     local function setupHitDetection(character)
         if not character or not character:IsA("Model") then return end
-        
         local characterName = character.Name
         local humanoid = character:FindFirstChildOfClass("Humanoid")
         
         if not humanoid then return end
-        
         if getgenv().connections and getgenv().connections["HitDetection_" .. characterName] then 
             return 
         end
-        
         local healthConnection = humanoid:GetPropertyChangedSignal("Health"):Connect(function()
             if character:GetAttribute("LastHit") == CustomTemplate.Player().Name then
                 for i = 1, #activeEntries do
                     local entry = activeEntries[i]
                     if entry and entry.track and entry.hitEvent then
+
                         task.spawn(entry.hitEvent, entry.track, character)
                     end
                 end
@@ -602,16 +600,8 @@ function CustomTemplate.SetUpAnimationEvents(animList)
         
         AddSignal(healthConnection, "HitDetection_" .. characterName)
         
-        local cleanupConnection = character.AncestryChanged:Connect(function()
-            if not character.Parent then
-                if getgenv().connections and getgenv().connections["HitDetection_" .. characterName] then
-                    getgenv().connections["HitDetection_" .. characterName]:Disconnect()
-                    getgenv().connections["HitDetection_" .. characterName] = nil
-                end
-            end
-        end)
+ 
         
-        AddSignal(cleanupConnection, "Cleanup_" .. characterName)
     end
     
     local function initializeExistingCharacters()
@@ -620,6 +610,7 @@ function CustomTemplate.SetUpAnimationEvents(animList)
         
         local characters = liveFolder:GetChildren()
         for i = 1, #characters do
+
             setupHitDetection(characters[i])
         end
     end
@@ -634,6 +625,11 @@ function CustomTemplate.SetUpAnimationEvents(animList)
         
         AddSignal(liveFolder.ChildAdded:Connect(function(character)
             task.wait(0.1)
+            if getgenv().connections and getgenv().connections["HitDetection_" .. character.Name] then
+                getgenv().connections["HitDetection_" .. character.Name]:Disconnect()
+                getgenv().connections["HitDetection_" .. character.Name] = nil
+            end
+            print("why?")
             setupHitDetection(character)
         end), "Child Groomed By Dream")
     end
