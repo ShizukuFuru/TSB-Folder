@@ -624,7 +624,7 @@ function CustomTemplate.SetUpAnimationEvents(animList)
 		end
 	end
 
-	local function setupAnimationDetection()Humanoid.Humanoid()
+	local function setupAnimationDetection()
 		if not Humanoid then
 			warn("SetUpAnimationEvents: Humanoid not found")
 			return
