@@ -701,6 +701,56 @@ function CustomTemplate.CleanupAnimationEvents()
     table.clear(activeEntries)
 end
 
+-- local vr = 0
+-- local blockCallbacks = {}           
+
+-- function CustomTemplate.OnBlock(func : Callback)
+--     if not CT.GetActiveConnections().connections["BlockReactor"] then
+--         AddSignal(CustomTemplate.Character():GetAttributeChangedSignal("BlockReact"):Connect(function()
+--             local val = math.abs(CustomTemplate.Character():GetAttribute("BlockReact") or 0)
+--             if val > vr or math.abs(val - vr) > 1 then
+--                 for _, cb in ipairs(blockCallbacks) do
+--                     cb()
+--                 end
+--             end
+--             vr = val
+--         end), "BlockReactor")
+--     end
+
+--     table.insert(blockCallbacks, func)
+-- end
+local blockCallbacks = {}
+local previousBlockValue = 0
+
+function CustomTemplate.OnBlock(func)
+    if type(func) ~= "function" then
+        error("CustomTemplate.OnBlock: Expected function as argument", 2)
+    end
+    
+    if not getgenv().connections["BlockReactor"] then   
+        AddSignal(CustomTemplate.Character():GetAttributeChangedSignal("BlockReact"):Connect(function()    
+            local currentBlockValue = math.abs(CustomTemplate.Character():GetAttribute("BlockReact") or 0)
+            local valueDifference = math.abs(currentBlockValue - previousBlockValue)
+            if currentBlockValue > previousBlockValue or valueDifference > 1 then
+                for i, callback in ipairs(blockCallbacks) do
+                    local success, err = pcall(callback, currentBlockValue, previousBlockValue)
+                    if not success then
+                        warn(string.format("CustomTemplate: Block callback #%d failed: %s", i, tostring(err)))
+                    end
+                end
+            end
+            previousBlockValue = currentBlockValue
+        end), "BlockReactor")
+    end
+    
+    table.insert(blockCallbacks, func)
+end
+
+function CustomTemplate.CleanupBlockDetection()
+    blockCallbacks = {}
+    previousBlockValue = 0
+end
+
 function CustomTemplate.GetActiveConnections()
     if not getgenv().connections then
         return {
