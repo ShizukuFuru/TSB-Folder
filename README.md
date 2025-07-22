@@ -273,7 +273,7 @@ local hotbar = CT.Hotbar("Left")
 hotbar:NewMove("R", "Detect nearest", {0,50,0,50}, "Left", 1.5, function()
     local nearest = CT.GetNearest()
     if nearest then
-        print(nearest.Parent.Name)
+        print(nearest.Name)
     end
 end)
 
