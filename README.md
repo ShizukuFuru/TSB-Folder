@@ -15,7 +15,6 @@ A specialized Roblox Luau module for creating "Movesets" for *The Strongest Batt
    - [Custom Animations and Events](#custom-animations-and-events)
 4. [API Reference](#api-reference)
 5. [Examples](#examples)
-6. [License](#license)
 
 ---
 
@@ -286,66 +285,5 @@ end)
 
 ---
 
-## License
 
-MIT License. See [LICENSE](LICENSE) for details.
-
-**OSAO License**\
-**Version 1.0 — July 22, 2025**
-
-Copyright (C) 2025 ShizukuFuru
-
-Everyone is permitted to copy, distribute, modify, and use this software for any purpose, subject to the following conditions:
-
-### 1. Definitions
-
-- **“You”** means any person or entity using, copying, modifying, or distributing the Software.
-- **“Software”** means the original work as well as any modifications or derivative works.
-- **“Original Author”** means the person or entity named above.
-
-### 2. Grant of Rights
-
-Subject to these terms, the Original Author grants you a worldwide, royalty‑free, non‑exclusive, irrevocable license to:
-
-1. **Use** the Software for any purpose.
-2. **Modify** the Software and create derivative works.
-3. **Distribute** the original or modified Software, in source or binary form, under the same terms.
-
-### 3. Conditions of Redistribution
-
-If you distribute the Software (original or modified), you must:
-
-1. **Retain** this license text and copyright notice in all copies.
-2. **Include** a prominent notice stating:
-   > “This product includes software originally authored by ShizukuFuru. \
-   > See: Discord user  handle **furatears**.”
-3. **Not** remove, obscure, or alter any existing copyright, trademark, or attribution notices in the Software.
-
-### 4. Attribution‑Only Clause
-
-You must **not**:
-
-- Claim authorship, ownership, or credit for the Original Author’s unmodified portions of the Software.
-- Use the Original Author’s name, trademarks, or logos to promote or imply endorsement of derivative works, without explicit permission.
-
-### 5. No Warranty
-
-The Software is provided “as is,” without warranty of any kind. In no event shall the Original Author be liable for any damages arising out of the use of or inability to use the Software.
-
-### 6. Limitation of Liability
-
-Under no circumstances and under no legal theory shall the Original Author be liable to you for any special, incidental, consequential, or punitive damages arising out of your use of the Software.
-
----
-
-**Summary of Permissions and Requirements**
-
-| PermissionRequirement                                                  |                                                                                  |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| ✅ Use, copy, modify, and distribute (commercially or non‑commercially) | 🔴 Must retain this license and include attribution to the Original Author       |
-|                                                                        | 🔴 Must state “includes software originally authored by furatears (ShizukuFuru)” |
-|                                                                        | 🔴 Must not remove or obscure credits                                            |
-|                                                                        | 🔴 Must not claim credit or ownership of the Original Author’s work              |
-
----
 
