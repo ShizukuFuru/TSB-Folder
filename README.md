@@ -84,7 +84,7 @@ local root = CT.RootPart()
 -- Create left-side hotbar
 local hotbarL = CT.Hotbar("Left")
 
--- Add a new move bound to key "Q"
+-- Add a new move bound to key "R"
 hotbarL:NewMove(
     "R",               -- Bind key
     "Dash",           -- Move name
