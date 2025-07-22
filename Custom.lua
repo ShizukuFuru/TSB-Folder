@@ -733,7 +733,7 @@ function CustomTemplate.OnBlock(func)
             local valueDifference = math.abs(currentBlockValue - previousBlockValue)
             if currentBlockValue > previousBlockValue or valueDifference > 1 then
                 for i, callback in ipairs(blockCallbacks) do
-                    local success, err = pcall(callback, currentBlockValue, previousBlockValue)
+                    local success, err = pcall(callback)
                     if not success then
                         warn(string.format("CustomTemplate: Block callback #%d failed: %s", i, tostring(err)))
                     end
