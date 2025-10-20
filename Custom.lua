@@ -803,4 +803,4 @@ function CustomTemplate.GetActiveConnections()
 	}
 end
 
---return CustomTemplate
+return CustomTemplate
