@@ -88,32 +88,32 @@ function CustomTemplate.CreateObject(sType, sProp)
 end
 
 function CustomTemplate.AddCustomFunction(obj, index, funcs)
-    obj[index] = obj[index] or {}
-    
-    for name ,func in funcs or {} do
-        obj[index][name] = func
-    end
-    return obj
+	obj[index] = obj[index] or {}
+	
+	for name ,func in funcs or {} do
+		obj[index][name] = func
+	end
+	return obj
 end
 
 function CustomTemplate.AddCustomMethod(obj, methods)
-    for name, method in methods or {} do
-        obj[name] = function(self, ...)
-            return method(self,...)
-        end
-    end
-    return obj
+	for name, method in methods or {} do
+		obj[name] = function(self, ...)
+			return method(self, ...)
+		end
+	end
+	return obj
 end
 
 function CustomTemplate.AddCustomEvent(obj, index, events)
-    obj[index] = obj[index] or {}
+	obj[index] = obj[index] or {}
 
-    for name, callback in events or {} do
-        local bindable = Instance.new('BindableEvent')
-        bindable.Event:Connect(callback)
-        obj[index][name] = bindable
-    end
-    return obj
+	for name, callback in events or {} do
+		local bindable = Instance.new('BindableEvent')
+		bindable.Event:Connect(callback)
+		obj[index][name] = bindable
+	end
+	return obj
 end
 
 function CustomTemplate.AddRbxasset(rbxasset, parent)
@@ -305,7 +305,7 @@ function Hotbar.new(side)
 	elseif side == 'R' or side == 'Right' then
 		self.instance = game:GetObjects(getcustomasset('TSBCustom/RightHotBar.rbxm'))[1]
 	else
-		print('Choose a valid side! ('L' or 'R')')
+		print("Choose a valid side! ('L' or 'R')")
 		return nil
 	end
 	self.instance.Parent = CustomTemplate.Player().PlayerGui:WaitForChild('Hotbar'):WaitForChild('Backpack'):WaitForChild('Hotbar')
@@ -395,7 +395,7 @@ end
 function Hotbar:EditMove(Name, options)
 	local move = self.moves[Name]
 	if not move then
-		warn('Move '' .. Name .. '' not found!')
+		warn('Move ' .. Name .. ' not found!')
 		return false
 	end
 
