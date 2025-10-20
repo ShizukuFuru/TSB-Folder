@@ -395,7 +395,7 @@ end
 function Hotbar:EditMove(Name, options)
 	local move = self.moves[Name]
 	if not move then
-		warn("Move " .. Name .. ' not found!')
+		warn('Move ' .. Name .. ' not found!')
 		return false
 	end
 
