@@ -305,7 +305,7 @@ function Hotbar.new(side)
 	elseif side == 'R' or side == 'Right' then
 		self.instance = game:GetObjects(getcustomasset('TSBCustom/RightHotBar.rbxm'))[1]
 	else
-		print('Choose a valid side! ('L' or 'R')')
+		print("Choose a valid side! ('L' or 'R')")
 		return nil
 	end
 	self.instance.Parent = CustomTemplate.Player().PlayerGui:WaitForChild('Hotbar'):WaitForChild('Backpack'):WaitForChild('Hotbar')
@@ -395,7 +395,7 @@ end
 function Hotbar:EditMove(Name, options)
 	local move = self.moves[Name]
 	if not move then
-		warn('Move '' .. Name .. '' not found!')
+		warn("Move " .. Name .. ' not found!')
 		return false
 	end
 
@@ -803,4 +803,4 @@ function CustomTemplate.GetActiveConnections()
 	}
 end
 
-return CustomTemplate
+--return CustomTemplate
