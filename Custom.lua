@@ -99,7 +99,7 @@ end
 function CustomTemplate.AddCustomMethod(obj, methods)
     for name, method in methods or {} do
         obj[name] = function(self, ...)
-            return method(self,...)
+            return method(self, ...)
         end
     end
     return obj
