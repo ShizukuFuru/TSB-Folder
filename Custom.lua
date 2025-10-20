@@ -590,7 +590,6 @@ function CustomTemplate.AnimationEvents(animId, func)
 	animationFuncs[animId] = func
 end
 
-
 local activeEntries = {}
 local isInitialized = false
 
@@ -619,7 +618,6 @@ function CustomTemplate.SetUpAnimationEvents(animList)
 				for i = 1, #activeEntries do
 					local entry = activeEntries[i]
 					if entry and entry.track and entry.hitEvent then
-
 						task.spawn(entry.hitEvent, entry.track, character)
 					end
 				end
@@ -627,9 +625,6 @@ function CustomTemplate.SetUpAnimationEvents(animList)
 		end)
 		
 		AddSignal(healthConnection, 'HitDetection_' .. characterName)
-		
- 
-		
 	end
 	
 	local function initializeExistingCharacters()
@@ -683,6 +678,8 @@ function CustomTemplate.SetUpAnimationEvents(animList)
 			local animData = animList[animId]
 			
 			if not animData then return end
+			
+			if animationTrack:GetAttribute('Ignore') then return end
 			
 			if animData.Events then
 				task.spawn(animData.Events, animationTrack, nil)
