@@ -679,8 +679,9 @@ function CustomTemplate.SetUpAnimationEvents(animList)
 			
 			if not animData then return end
 			
+			if animationTrack:GetAttribute('Ignore') then return end
+			
 			if animData.Events then
-				if animationTrack:GetAttribute('Ignore') then return end
 				task.spawn(animData.Events, animationTrack, nil)
 			end
 			
