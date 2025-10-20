@@ -88,32 +88,32 @@ function CustomTemplate.CreateObject(sType, sProp)
 end
 
 function CustomTemplate.AddCustomFunction(obj, index, funcs)
-    obj[index] = obj[index] or {}
-    
-    for name ,func in funcs or {} do
-        obj[index][name] = func
-    end
-    return obj
+	obj[index] = obj[index] or {}
+	
+	for name ,func in funcs or {} do
+		obj[index][name] = func
+	end
+	return obj
 end
 
 function CustomTemplate.AddCustomMethod(obj, methods)
-    for name, method in methods or {} do
-        obj[name] = function(self, ...)
-            return method(self, ...)
-        end
-    end
-    return obj
+	for name, method in methods or {} do
+		obj[name] = function(self, ...)
+			return method(self, ...)
+		end
+	end
+	return obj
 end
 
 function CustomTemplate.AddCustomEvent(obj, index, events)
-    obj[index] = obj[index] or {}
+	obj[index] = obj[index] or {}
 
-    for name, callback in events or {} do
-        local bindable = Instance.new('BindableEvent')
-        bindable.Event:Connect(callback)
-        obj[index][name] = bindable
-    end
-    return obj
+	for name, callback in events or {} do
+		local bindable = Instance.new('BindableEvent')
+		bindable.Event:Connect(callback)
+		obj[index][name] = bindable
+	end
+	return obj
 end
 
 function CustomTemplate.AddRbxasset(rbxasset, parent)
