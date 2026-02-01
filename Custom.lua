@@ -1,3 +1,4 @@
+--!strict
 local CustomTemplate = {}
 
 --Services
@@ -10,40 +11,38 @@ local UserInputService = game:GetService('UserInputService')
 --Custom Modules!!!!!!!!!!!!
 local Trove = loadstring(game:HttpGet('https://raw.githubusercontent.com/skibiditoiletfan2007/ScriptPackages/main/Trove0_4_1.lua'))()
 
----idkss
-local shitteryLock = true
 
-getgenv().moves = getgenv().moves or {}
-getgenv().animationFuncs = getgenv().animationFuncs or {}
-getgenv().connections = getgenv().connections or {}
+getgenv().moves = moves or {}
+getgenv().animationFuncs = animationFuncs or {}
+getgenv().connections = connections or {}
 
 --- thing
 
 local function DestroySignals()
-	if not getgenv().connections then 
-		getgenv().connections = {}
+	if not connections then 
+		connections = {}
 		return 
 	end
 	
-	for i, v in pairs(getgenv().connections) do
+	for i, v in pairs(connections) do
 		if typeof(v) == 'RBXScriptConnection' then
 			v:Disconnect()
 		end
 	end
-	getgenv().connections = {}
+	connections = {}
 end
 
 local function SetupSignals()
-	if getgenv().connections then
+	if connections then
 		DestroySignals()
 	else
-		getgenv().connections = {}
+		connections = {}
 	end
 end
 SetupSignals()
 local function AddSignal(connection, name)
-	if getgenv().connections then
-		getgenv().connections[name or #getgenv().connections + 1] = connection
+	if connections then
+		connections[name or #connections + 1] = connection
 		return connection
 	end
 end
@@ -171,11 +170,11 @@ end
 
 function CustomTemplate.CleanupMoves()
 	print('god damn it')
-	for i, trove in pairs(getgenv().moves) do
+	for i, trove in pairs(moves) do
 		trove:Clean()
 		print('are you sure this is happening')
 	end
-	getgenv().moves = {}
+	moves = {}
 end
 local clonedCharacter = nil
 local isCloneFollowToggled = false
@@ -188,82 +187,6 @@ function UpdateModelOrientation()
 		CustomTemplate.RootPart().CFrame = CFrame.new(CustomTemplate.RootPart().CFrame.p) * CFrame.fromOrientation(0, ry, 0)
 	end
 end
-
-function CustomTemplate.CloneFollow(state, shitLock)
-	if state == nil then
-		isCloneFollowToggled = not isCloneFollowToggled
-	else
-		isCloneFollowToggled = state
-	end
-	if shitLock == false then
-		shitteryLock = false
-	else
-		shitteryLock = true
-	end
-
-	local function UpdateClone()
-		if isCloneFollowToggled and clonedCharacter then
-			for _, originalPart in pairs(CustomTemplate.Character():GetChildren()) do
-				local clonePart = clonedCharacter:FindFirstChild(originalPart.Name)
-				if clonePart and (clonePart:IsA('BasePart') or clonePart:IsA('Part')) then
-					clonePart.CFrame = originalPart.CFrame
-					clonePart.CanCollide = false
-				elseif clonePart and clonePart:IsA('Humanoid') then
-					clonePart.Health = originalPart.Health
-					clonePart.WalkSpeed = originalPart.WalkSpeed
-					clonePart.JumpPower = originalPart.JumpPower
-				end
-			end
-		end
-	end
-	if isCloneFollowToggled then
-		if not clonedCharacter then
-			clonedCharacter = CustomTemplate.Character():Clone()
-			clonedCharacter.Parent = game.Workspace
-
-			for _, descendant in pairs(clonedCharacter:GetDescendants()) do
-				if descendant:IsA('BasePart') then
-					descendant.Transparency = 1
-					descendant.CanCollide = false
-				elseif descendant:IsA('Accessory') or descendant:IsA('Hat') then
-					descendant:Destroy()
-				end
-			end
-
-			if clonedCharacter:FindFirstChild('HumanoidRootPart') then
-				clonedCharacter:FindFirstChild('HumanoidRootPart').Anchored = true
-			end
-
-			CustomTemplate.Camera().CameraSubject = clonedCharacter:FindFirstChild('Humanoid')
-		end
-
-		RunService.RenderStepped:Connect(UpdateClone)
-	else
-		if clonedCharacter then
-			clonedCharacter:Destroy()
-			clonedCharacter = nil
-
-			CustomTemplate.Camera().CameraSubject = CustomTemplate.Humanoid()
-		end
-	end
-end
-UserInputService:GetPropertyChangedSignal('MouseBehavior'):Connect(function()
-	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
-		if not shiftLockEnabled then
-			shiftLockEnabled = true
-			task.spawn(function()
-				while shiftLockEnabled and isCloneFollowToggled and shitteryLock do
-					UpdateModelOrientation()
-					task.wait()
-				end
-			end)
-		end
-	else
-		if shiftLockEnabled then
-			shiftLockEnabled = false
-		end
-	end
-end)
 
 --Moveset function
 
@@ -298,7 +221,7 @@ function Hotbar.new(side)
 	local self = setmetatable({}, Hotbar)
 	self.trove = Trove.new()
 	self.moves = {}
-	table.insert(getgenv().moves, self.trove)
+	table.insert(moves, self.trove)
 
 	if side == 'L' or side == 'Left' then
 		self.instance = game:GetObjects(getcustomasset('TSBCustom/LeftHotBar.rbxm'))[1]
@@ -564,7 +487,7 @@ function Hotbar:StartCooldown(moveName)
 end
 function Hotbar:DestroyTrove()
 	if self.trove then
-		print('hola seniopr')
+		-- print('hola seniopr')
 		self.trove:Clean()
 	end
 end
@@ -610,7 +533,7 @@ function CustomTemplate.SetUpAnimationEvents(animList)
 		local humanoid = character:FindFirstChildOfClass('Humanoid')
 		
 		if not humanoid then return end
-		if getgenv().connections and getgenv().connections['HitDetection_' .. characterName] then 
+		if connections and connections['HitDetection_' .. characterName] then 
 			return 
 		end
 		local healthConnection = humanoid:GetPropertyChangedSignal('Health'):Connect(function()
@@ -648,9 +571,9 @@ function CustomTemplate.SetUpAnimationEvents(animList)
 		
 		AddSignal(liveFolder.ChildAdded:Connect(function(character)
 			task.wait(0.1)
-			if getgenv().connections and getgenv().connections['HitDetection_' .. character.Name] then
-				getgenv().connections['HitDetection_' .. character.Name]:Disconnect()
-				getgenv().connections['HitDetection_' .. character.Name] = nil
+			if connections and connections['HitDetection_' .. character.Name] then
+				connections['HitDetection_' .. character.Name]:Disconnect()
+				connections['HitDetection_' .. character.Name] = nil
 			end
 			print('why?')
 			setupHitDetection(character)
@@ -752,7 +675,7 @@ function CustomTemplate.OnBlock(func)
 		error('CustomTemplate.OnBlock: Expected function as argument', 2)
 	end
 	
-	if not getgenv().connections['BlockReactor'] then   
+	if not connections['BlockReactor'] then   
 		AddSignal(CustomTemplate.Character():GetAttributeChangedSignal('BlockReact'):Connect(function()	
 			local currentBlockValue = math.abs(CustomTemplate.Character():GetAttribute('BlockReact') or 0)
 			local valueDifference = math.abs(currentBlockValue - previousBlockValue)
@@ -777,7 +700,7 @@ function CustomTemplate.CleanupBlockDetection()
 end
 
 function CustomTemplate.GetActiveConnections()
-	if not getgenv().connections then
+	if not connections then
 		return {
 			totalConnections = 0,
 			activeEntries = #activeEntries,
@@ -788,7 +711,7 @@ function CustomTemplate.GetActiveConnections()
 	local connectionInfo = {}
 	local totalCount = 0
 	
-	for name, connection in pairs(getgenv().connections) do
+	for name, connection in pairs(connections) do
 		connectionInfo[name] = typeof(connection) == 'RBXScriptConnection' and 'Active' or 'Invalid'
 		totalCount = totalCount + 1
 	end
