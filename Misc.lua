@@ -1,12 +1,12 @@
 local Misc = {}
 
-local CT = loadfile("TSB Folder/Custom-TEST.lua")()
+local CT = loadstring(game:HttpGet('https://raw.githubusercontent.com/ShizukuFuru/TSB-Folder/refs/heads/main/Custom-TEST.lua'))()
 
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
--- Cached constructors / constants
+ 
 local cfNew = CFrame.new
 local cfFromOrientation = CFrame.fromOrientation
 local v3New = Vector3.new
@@ -16,7 +16,7 @@ local CAMERA_OFFSET_SHIFTLOCK = v3New(1.75, 0, 0)
 local CAMERA_OFFSET_DEFAULT   = v3New(0, 0, 0)
 local CF_IDENTITY = cfNew()
 
--- Persistent state across loadfile calls
+ 
 if not getgenv().MiscGlueState then
 	getgenv().MiscGlueState = {
 		glueConnection     = nil,
@@ -30,20 +30,18 @@ if not getgenv().MiscGlueState then
 end
 local state = getgenv().MiscGlueState
 
--- Camera subject hook state
+ 
 if not getgenv().MW_Camera then
 	getgenv().MW_Camera = { CameraSubject = nil }
 end
 local MW_Camera = getgenv().MW_Camera
-
--- Hook metamethods once globally
+ 
 if not getgenv().MW_CameraHooked then
 	getgenv().MW_CameraHooked = true
 	local IsA = game.IsA
 
 	local __index
 	__index = hookmetamethod(game, "__index", newcclosure(function(self, key)
-		-- Short-circuit: cheapest checks first
 		if not checkcaller() and MW_Camera.CameraSubject then
 			if typeof(self) == "Instance" and IsA(self, "Camera") then
 				if key == "CameraSubject" or key == "cameraSubject" then
@@ -156,7 +154,6 @@ function Misc.Hitbox(originCFrame, size, filterList, mode, duration, onHit)
 	params.FilterDescendantsInstances = filterList or {}
 
 	local hitCooldown = {}
-	-- Pre-compute deadline instead of subtracting every frame
 	local endTime = duration and (tick() + duration) or nil
 	local isDynamic = type(originCFrame) == "function"
 
@@ -211,10 +208,6 @@ function Misc.Hitbox(originCFrame, size, filterList, mode, duration, onHit)
 
 	return self
 end
-
-----------------------------------------------------------------
--- Glue Clone
-----------------------------------------------------------------
 
 ----------------------------------------------------------------
 -- Glue Clone
