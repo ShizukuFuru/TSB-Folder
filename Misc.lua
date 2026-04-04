@@ -305,14 +305,24 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 	if not Toggle then return end
 
 	local offsetCF
+	local offsetFunc
+	local offsetType
+	
 	if type(Offset) == "function" then
-		offsetCF = nil
+		offsetFunc = Offset
+		offsetType = "function"
+	elseif typeof(Offset) == "CFrame" then
+		offsetCF = Offset
+		offsetType = "cframe"
 	elseif typeof(Offset) == "Vector3" then
 		offsetCF = cfNew(Offset)
+		offsetType = "cframe"
 	elseif type(Offset) == "table" then
 		offsetCF = cfNew(Offset[1] or 0, Offset[2] or 0, Offset[3] or 0)
+		offsetType = "cframe"
 	else
 		offsetCF = CF_IDENTITY
+		offsetType = "cframe"
 	end
 
 	state.glueActive = true
@@ -325,11 +335,17 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 			local pr = c.PrimaryPart
 			if not pr then return end
 			sethiddenproperty(pr, "PhysicsRepRootPart", Root)
-			if offsetCF then
-				pr.CFrame = Root.CFrame * offsetCF
+			
+			if offsetType == "function" then
+				local result = offsetFunc()
+				if typeof(result) == "CFrame" then
+					pr.CFrame = result
+				else
+					local ox, oy, oz = offsetFunc()
+					pr.CFrame = Root.CFrame * cfNew(ox, oy, oz)
+				end
 			else
-				local ox, oy, oz = Offset()
-				pr.CFrame = Root.CFrame * cfNew(ox, oy, oz)
+				pr.CFrame = Root.CFrame * offsetCF
 			end
 		end)
 		return
@@ -380,11 +396,17 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
  		state.lastClientCFrame = pr.CFrame
 
  		sethiddenproperty(pr, "PhysicsRepRootPart", Root)
-		if offsetCF then
-			pr.CFrame = Root.CFrame * offsetCF
+		
+		if offsetType == "function" then
+			local result = offsetFunc()
+			if typeof(result) == "CFrame" then
+				pr.CFrame = result
+			else
+				local ox, oy, oz = offsetFunc()
+				pr.CFrame = Root.CFrame * cfNew(ox, oy, oz)
+			end
 		else
-			local ox, oy, oz = Offset()
-			pr.CFrame = Root.CFrame * cfNew(ox, oy, oz)
+			pr.CFrame = Root.CFrame * offsetCF
 		end
 	end)
 end
