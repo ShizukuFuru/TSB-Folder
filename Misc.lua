@@ -327,13 +327,32 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 
 	state.glueActive = true
 
+	local function checkAlive()
+		local c = CT.Character()
+		if not c then return false end
+		local pr = c.PrimaryPart
+		local hum = c:FindFirstChildOfClass("Humanoid")
+		if not pr or not hum or hum.Health <= 0 or pr.Position.Y < workspace.FallenPartsDestroyHeight then
+			return false
+		end
+
+		if not Root or not Root.Parent then return false end
+		local rootPos = Root:IsA("Model") and Root:GetPivot().Position or Root.Position
+		if rootPos.Y < workspace.FallenPartsDestroyHeight then
+			return false
+		end
+		local tHum = Root.Parent:FindFirstChildOfClass("Humanoid")
+		if tHum and tHum.Health <= 0 then return false end
+
+		return true, pr
+	end
+
 	if not UseDesync then
 		state.glueConnection = RunService.Heartbeat:Connect(function()
 			if not state.glueActive then return end
-			local c = CT.Character()
-			if not c then return end
-			local pr = c.PrimaryPart
-			if not pr then return end
+			local ok, pr = checkAlive()
+			if not ok then Misc.StopGlue() return end
+			
 			sethiddenproperty(pr, "PhysicsRepRootPart", Root)
 			
 			if offsetType == "function" then
@@ -342,10 +361,10 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 					pr.CFrame = result
 				else
 					local ox, oy, oz = offsetFunc()
-					pr.CFrame = Root.CFrame * cfNew(ox, oy, oz)
+					pr.CFrame = (Root:IsA("Model") and Root:GetPivot() or Root.CFrame) * cfNew(ox, oy, oz)
 				end
 			else
-				pr.CFrame = Root.CFrame * offsetCF
+				pr.CFrame = (Root:IsA("Model") and Root:GetPivot() or Root.CFrame) * offsetCF
 			end
 		end)
 		return
@@ -364,34 +383,23 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 
 	state.glueCamConnection = RunService.RenderStepped:Connect(function()
 		if not state.glueActive then return end
-		local c = CT.Character()
-		if not c then return end
-		local pr = c.PrimaryPart
-		local h = c:FindFirstChildOfClass("Humanoid")
-		if not pr or not h then return end
+		local ok, pr = checkAlive()
+		if not ok then Misc.StopGlue() return end
 
 		if state.lastClientCFrame then
 			pr.CFrame = state.lastClientCFrame
 		end
 
 		if state.glueShiftLock then
-			print("hey..")
 			local _, ry = workspace.CurrentCamera.CFrame:ToOrientation()
 			pr.CFrame = cfNew(pr.Position) * cfFromOrientation(0, ry, 0)
-		end
-
-		local gc = state.glueClone
-		if gc and gc.PrimaryPart then
-			gc.PrimaryPart.CFrame = pr.CFrame
 		end
 	end)
 
 	state.glueConnection = RunService.Heartbeat:Connect(function()
 		if not state.glueActive then return end
-		local c = CT.Character()
-		if not c then return end
-		local pr = c.PrimaryPart
-		if not pr then return end
+		local ok, pr = checkAlive()
+		if not ok then Misc.StopGlue() return end
 
  		state.lastClientCFrame = pr.CFrame
 
@@ -403,10 +411,15 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 				pr.CFrame = result
 			else
 				local ox, oy, oz = offsetFunc()
-				pr.CFrame = Root.CFrame * cfNew(ox, oy, oz)
+				pr.CFrame = (Root:IsA("Model") and Root:GetPivot() or Root.CFrame) * cfNew(ox, oy, oz)
 			end
 		else
-			pr.CFrame = Root.CFrame * offsetCF
+			pr.CFrame = (Root:IsA("Model") and Root:GetPivot() or Root.CFrame) * offsetCF
+		end
+
+		local gc = state.glueClone
+		if gc and gc.PrimaryPart then
+			gc.PrimaryPart.CFrame = state.lastClientCFrame
 		end
 	end)
 end
