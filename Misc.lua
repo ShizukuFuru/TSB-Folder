@@ -6,6 +6,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
+local LocalPlayer = Players.LocalPlayer
  
 local cfNew = CFrame.new
 local cfFromOrientation = CFrame.fromOrientation
@@ -13,57 +14,50 @@ local v3New = Vector3.new
 local tick = tick
 
 local CAMERA_OFFSET_SHIFTLOCK = v3New(1.75, 0, 0)
-local CAMERA_OFFSET_DEFAULT   = v3New(0, 0, 0)
+local CAMERA_OFFSET_DEFAULT = v3New(0, 0, 0)
 local CF_IDENTITY = cfNew()
 
- 
+local RootCFrame = CFrame.new()
+local HeadCFrame = CFrame.new()
+
 if not getgenv().MiscGlueState then
 	getgenv().MiscGlueState = {
-		glueConnection     = nil,
+		glueConnection	 = nil,
 		glueCamConnection  = nil,
 		glueInputConnection = nil,
-		glueShiftLock      = false,
-		glueClone          = nil,
-		glueActive         = false,
+		glueShiftLock	  = false,
+		glueClone		  = nil,
+		glueActive		 = false,
 		lastClientCFrame   = nil,
+		Yield			  = false,
+		Toggle			 = false
 	}
 end
 local state = getgenv().MiscGlueState
 
- 
-if not getgenv().MW_Camera then
-	getgenv().MW_Camera = { CameraSubject = nil }
-end
-local MW_Camera = getgenv().MW_Camera
- 
-if not getgenv().MW_CameraHooked then
-	getgenv().MW_CameraHooked = true
-	local IsA = game.IsA
+local GameMT = getrawmetatable(game)
+local NamecallFunc = GameMT.__index
 
-	local __index
-	__index = hookmetamethod(game, "__index", newcclosure(function(self, key)
-		if not checkcaller() and MW_Camera.CameraSubject then
-			if typeof(self) == "Instance" and IsA(self, "Camera") then
-				if key == "CameraSubject" or key == "cameraSubject" then
-					return MW_Camera.CameraSubject
+if isfunctionhooked(NamecallFunc) then
+	restorefunction(NamecallFunc)
+end
+
+local Old = nil
+Old = hookmetamethod(game, "__index", newcclosure(function(self, key)
+	if not checkcaller() then
+		if state.Toggle and key == "CFrame" then
+			if LocalPlayer.Character then
+				if self == LocalPlayer.Character.HumanoidRootPart then
+					return RootCFrame
+				elseif self == LocalPlayer.Character.Head then
+					return HeadCFrame
 				end
 			end
 		end
-		return __index(self, key)
-	end))
+	end
 
-	local __newindex
-	__newindex = hookmetamethod(game, "__newindex", newcclosure(function(self, key, value)
-		if not checkcaller() and MW_Camera.CameraSubject then
-			if typeof(self) == "Instance" and IsA(self, "Camera") then
-				if key == "CameraSubject" or key == "cameraSubject" then
-					return
-				end
-			end
-		end
-		return __newindex(self, key, value)
-	end))
-end
+	return Old(self, key)
+end))
 
 ----------------------------------------------------------------
 -- Utilities
@@ -278,13 +272,16 @@ end
 -- Glue
 ----------------------------------------------------------------
 
-function Misc.Glue(Root, Offset, Toggle, UseDesync)
+-- useShiftlock is useless right now 
+function Misc.Glue(Root, Offset, Toggle, UseDesync, useShiftlock, Yield, Timeout)
 	state.glueActive = false
-
+	state.Yield = false
+	state.Toggle = false
+	
 	DisconnectState("glueConnection")
 	DisconnectState("glueCamConnection")
-	DisconnectState("glueInputConnection")
-	state.glueShiftLock = false
+	--DisconnectState("glueInputConnection")
+	--state.glueShiftLock = true
 
 	if state.lastClientCFrame then
 		local c = CT.Character()
@@ -294,16 +291,29 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 		state.lastClientCFrame = nil
 	end
 
-	DestroyGlueClone()
+	--DestroyGlueClone()
 
-	MW_Camera.CameraSubject = nil
+	--[[MW_Camera.CameraSubject = nil
 	local hum = CT.Humanoid()
 	if hum then
 		workspace.CurrentCamera.CameraSubject = hum
 	end
+	]]
 
 	if not Toggle then return end
-
+	
+	Timeout = typeof(Timeout) ~= 'number' and 10 or Timeout
+	local start = os.clock()
+	
+	task.spawn(function()
+		repeat RunService.RenderStepped:Wait()
+			if os.clock() - start >= Timeout then
+				Misc.StopGlue()
+				break
+			end
+		until false
+	end)
+	
 	local offsetCF
 	local offsetFunc
 	local offsetType
@@ -326,13 +336,15 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 	end
 
 	state.glueActive = true
+	state.Toggle = UseDesync;
 
 	local function checkAlive()
 		local c = CT.Character()
 		if not c then return false end
 		local pr = c.PrimaryPart
+		local h = c.Head
 		local hum = c:FindFirstChildOfClass("Humanoid")
-		if not pr or not hum or hum.Health <= 0 or pr.Position.Y < workspace.FallenPartsDestroyHeight then
+		if not pr or not h or not hum or hum.Health <= 0 or pr.Position.Y < workspace.FallenPartsDestroyHeight then
 			return false
 		end
 
@@ -344,7 +356,7 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 		local tHum = Root.Parent:FindFirstChildOfClass("Humanoid")
 		if tHum and tHum.Health <= 0 then return false end
 
-		return true, pr
+		return true, pr, h
 	end
 
 	if not UseDesync then
@@ -370,22 +382,27 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 		return
 	end
 
-	state.glueClone = CreateGlueClone()
-	if not state.glueClone then return end
+	--state.glueClone = CreateGlueClone()
+	--if not state.glueClone then return end
 
+	--[[
 	local cloneHum = state.glueClone:FindFirstChildOfClass("Humanoid")
 	workspace.Camera.CameraSubject = cloneHum
 	MW_Camera.CameraSubject = cloneHum
+	]]
 
+	--[[
 	state.glueInputConnection = UserInputService:GetPropertyChangedSignal("MouseBehavior"):Connect(function()
 		state.glueShiftLock = UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter
 	end)
+	]]
 
+	--[[
 	state.glueCamConnection = RunService.RenderStepped:Connect(function()
 		if not state.glueActive then return end
 		local ok, pr = checkAlive()
 		if not ok then Misc.StopGlue() return end
-
+		
 		if state.lastClientCFrame then
 			pr.CFrame = state.lastClientCFrame
 		end
@@ -395,20 +412,55 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 			pr.CFrame = cfNew(pr.Position) * cfFromOrientation(0, ry, 0)
 		end
 	end)
-
+	]]
+	
+	
+	state.glueConnection = RunService.Heartbeat:Connect(function()
+		if not state.glueActive then return end
+		local ok, pr, h = checkAlive()
+		if not ok then Misc.StopGlue() return end
+		
+		if pr and h then
+			state.lastClientCFrame = pr.CFrame
+			RootCFrame = state.lastClientCFrame
+			HeadCFrame = h.CFrame
+			
+			if offsetType == "function" then
+				local result = offsetFunc()
+				if typeof(result) == "CFrame" then
+					pr.CFrame = result
+				else
+					local ox, oy, oz = offsetFunc()
+					pr.CFrame = state.lastClientCFrame * cfNew(ox, oy, oz)
+				end
+			else
+				pr.CFrame = state.lastClientCFrame * offsetCF
+			end
+			RunService.RenderStepped:Wait()
+			
+			pr.CFrame = state.lastClientCFrame
+		end
+	end)
+	
+	--[[
 	state.glueConnection = RunService.Heartbeat:Connect(function()
 		if not state.glueActive then return end
 		local ok, pr = checkAlive()
 		if not ok then Misc.StopGlue() return end
-
+		
+		sethiddenproperty(pr, "PhysicsRepRootPart", Root)
+		
  		state.lastClientCFrame = pr.CFrame
 
- 		sethiddenproperty(pr, "PhysicsRepRootPart", Root)
-		
 		if offsetType == "function" then
 			local result = offsetFunc()
 			if typeof(result) == "CFrame" then
-				pr.CFrame = result
+				if glueShiftLock then
+					local _, ry = workspace.CurrentCamera.CFrame:ToOrientation()
+					pr.CFrame = cfNew(result.Position) * cfFromOrientation(0, ry, 0)
+				else
+					pr.CFrame = result
+				end
 			else
 				local ox, oy, oz = offsetFunc()
 				pr.CFrame = (Root:IsA("Model") and Root:GetPivot() or Root.CFrame) * cfNew(ox, oy, oz)
@@ -421,32 +473,40 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync)
 		if gc and gc.PrimaryPart then
 			gc.PrimaryPart.CFrame = state.lastClientCFrame
 		end
-	end)
+	end)]]
+	
+	state.Yield = Yield
+	if Yield then
+		repeat task.wait()
+			local ok, pr = checkAlive()
+			if not ok then break end
+		until not state.Yield 
+	end
 end
 
 function Misc.StopGlue()
-	Misc.Glue(nil, nil, false)
+	Misc.Glue(nil, nil, false, nil, false, false)
 end
 
 function Misc.Fling(root, targetPos, options)
 	--[[
-		root:       BasePart or Model to fling (should be anchored or network-owned)
+		root:	   BasePart or Model to fling (should be anchored or network-owned)
 		targetPos:  Vector3 final resting position
-		options:    optional config table
+		options:	optional config table
 		
 		Returns handle with :Stop()
 	]]
 	options = options or {}
 
-	local arcHeight   = options.arcHeight   or 15     -- peak height above start/end
-	local maxBounces  = options.bounces     or 2      -- ground bounces before settling
-	local restitution = options.restitution or 0.3    -- vertical energy kept per bounce (0-1)
-	local friction    = options.friction    or 0.5    -- horizontal speed kept per bounce (0-1)
-	local drag        = options.drag        or 0      -- air resistance per frame (0 = none)
-	local tumbleRate  = options.tumbleSpeed or 12     -- radians/sec at full speed
-	local snapTime    = options.snapDuration or 0.35  -- seconds to ease into final position
-	local groundY     = options.groundY     or targetPos.Y
-	local onComplete  = options.onComplete            -- callback when done
+	local arcHeight   = options.arcHeight   or 15	 -- peak height above start/end
+	local maxBounces  = options.bounces	 or 2	  -- ground bounces before settling
+	local restitution = options.restitution or 0.3	-- vertical energy kept per bounce (0-1)
+	local friction	= options.friction	or 0.5	-- horizontal speed kept per bounce (0-1)
+	local drag		= options.drag		or 0	  -- air resistance per frame (0 = none)
+	local tumbleRate  = options.tumbleSpeed or 12	 -- radians/sec at full speed
+	local snapTime	= options.snapDuration or 0.35  -- seconds to ease into final position
+	local groundY	 = options.groundY	 or targetPos.Y
+	local onComplete  = options.onComplete			-- callback when done
 
 	local isModel = root:IsA("Model")
 	local startPos = isModel and root:GetPivot().Position or root.Position
@@ -467,7 +527,7 @@ function Misc.Fling(root, targetPos, options)
 	-- Flight time = time rising + time falling from peak to groundY
 	local tUp   = vy0 / g
 	local tDown = math.sqrt(math.max(0.01, 2 * (peakY - groundY) / g))
-	local T     = math.max(tUp + tDown, 0.1)
+	local T	 = math.max(tUp + tDown, 0.1)
 
 	-- Horizontal velocity so we arrive at target.X/Z at time T
 	local vx0 = (targetPos.X - startPos.X) / T
@@ -478,7 +538,7 @@ function Misc.Fling(root, targetPos, options)
 	local pos  = startPos
 	local bouncesUsed = 0
 	local tumbleAngle = 0
-	local phase       = "flight"   -- "flight" | "snap"
+	local phase	   = "flight"   -- "flight" | "snap"
 	local snapStartT  = 0
 	local snapFromPos, snapFromRot
 	local elapsed = 0
