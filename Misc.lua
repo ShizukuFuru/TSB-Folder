@@ -272,7 +272,8 @@ end
 -- Glue
 ----------------------------------------------------------------
 
--- useShiftlock is useless right now 
+local start
+state.Timeout = 10
 function Misc.Glue(Root, Offset, Toggle, UseDesync, useShiftlock, Yield, Timeout)
 	state.glueActive = false
 	state.Yield = false
@@ -302,12 +303,12 @@ function Misc.Glue(Root, Offset, Toggle, UseDesync, useShiftlock, Yield, Timeout
 
 	if not Toggle then return end
 	
-	Timeout = typeof(Timeout) ~= 'number' and 10 or Timeout
-	local start = os.clock()
+	state.Timeout = typeof(Timeout) ~= 'number' and 10 or Timeout
+	start = os.clock()
 	
 	task.spawn(function()
 		repeat RunService.RenderStepped:Wait()
-			if os.clock() - start >= Timeout then
+			if root and root.Parent and root.Parent.Humanoid and root.Parent.Humanoid.Health > 0 and os.clock() - start >= state.Timeout then
 				Misc.StopGlue()
 				break
 			end
